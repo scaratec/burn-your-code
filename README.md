@@ -1,4 +1,4 @@
-# Burn Your Code: Feature Files are the New Source
+# Burn Your Code: Feature Files as the Ultimate AI Agent Prompt
 
 This repository contains the structure and content for a presentation on the radical shift in software development: **AI-Driven Behavior-Driven Development (BDD)**.
 
@@ -20,13 +20,14 @@ By using the classic Red/Green development cycle as a guardrail, we ensure that 
 3.  **Communication**: Bridging the gap to stakeholders.
 4.  **The Experiment**: Proving that code is disposable.
 5.  **The Workflow**: AI-driven Red/Green cycle.
-6.  **Guardrails**: Preventing AI hallucinations.
-7.  **Speed Paradox**: Why "slow" BDD is now the fastest way to build.
-8.  **Language Agnosticism**: Technology choice as a minor detail.
-9.  **Code as a Commodity**: Focusing on value, not syntax.
-10. **Longevity**: Solving onboarding and legacy code issues.
-11. **The Human Role**: The shift from coder to architect.
-12. **Conclusion**: The industrialization of software development.
+6.  **Vibe Coding vs. Engineering**: Contrasting reproducible specs with ad-hoc chat chaos.
+7.  **Guardrails**: Preventing AI hallucinations.
+8.  **Speed Paradox**: Why "slow" BDD is now the fastest way to build.
+9.  **Language Agnosticism**: Technology choice as a minor detail.
+10. **Code as a Commodity**: Focusing on value, not syntax.
+11. **Longevity**: Solving onboarding and legacy code issues.
+12. **The Human Role**: The shift from coder to architect.
+13. **Conclusion**: The industrialization of software development.
 
 ## How to Use
 

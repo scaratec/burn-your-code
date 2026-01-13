@@ -1,7 +1,7 @@
 # Conference Submission
 
 ## Title
-**"Burn Your Code: Feature Files are the New Source"**
+**"Burn Your Code: Feature Files as the Ultimate AI Agent Prompt"**
 
 ---
 
