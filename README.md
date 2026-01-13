@@ -4,9 +4,9 @@ This repository contains the structure and content for a presentation on the rad
 
 ## The Core Concept
 
-In modern software engineering, the implementation (code) is becoming a commodity. This talk explores a workflow where human-written **Gherkin Feature Files** serve as the sole "Single Source of Truth" and a deterministic prompt for AI agents.
+In modern software engineering, the implementation (code) is becoming a commodity. However, as **"Vibe Coding"** (ad-hoc coding via chat) gains popularity, we face a critical challenge: ensuring reproducibility and precision.
 
-By using the classic Red/Green development cycle as a guardrail, we ensure that AI-generated code remains precise, maintainable, and aligned with business requirements, effectively turning the developer from a craftsman into an architect of behavior.
+This talk explores a workflow where human-written **Gherkin Feature Files** serve as the sole "Single Source of Truth" and the ultimate **deterministic prompt** for AI agents. We address the **"Speed Paradox"**: showing how the strict structure of BDD, which once slowed humans down, now acts as the perfect guardrail, enabling AI to deliver high-quality code at industrial scale.
 
 ## Repository Structure
 
