@@ -55,6 +55,35 @@ def start_service(context):
 **Konsequenz & Fazit:**
 Die Tests erzwingen, dass die Applikation vollständig über die Kommandozeile konfigurierbar ist. Es gibt keine hardcodierten Konstanten für Ports oder URLs im Code, da der Test sonst nicht funktionieren würde. Die **CLI-Schnittstelle wird durch den Test definiert**.
 
+### 2.2 Die Gefahr von Datenlücken (Requirement Gaps)
+
+Ein kritisches Versagen im Test-Design tritt auf, wenn im Erwartungshorizont (`Then`) Daten gefordert werden, die in der Datenbasis (`Given`) nicht enthalten sind. Dies erzeugt eine logische Lücke, die die technische Umsetzung korrumpiert: Der Entwickler (oder der KI-Agent) wird gezwungen, "magische Werte" hart zu kodieren, um den Test zu bestehen. 
+
+Ein valider BDD-Test muss eine **reine Transformation** (Pure Function) darstellen. Jeder Wert, der im `Then`-Schritt validiert wird, muss entweder:
+1.  Direkt aus dem `Given`-Schritt stammen.
+2.  Durch eine im Feature-File explizit beschriebene Business-Regel aus den Eingangsdaten abgeleitet werden.
+
+**Anti-Pattern (Datenlücke):**
+Das Szenario erwartet eine spezifische IBAN und Steuer-Codes im Ergebnis, liefert diese aber nicht im Input mit.
+
+*Schlechtes Feature File:*
+```gherkin
+Scenario: Map Order to Marketplace
+    Given an order for item "X"
+    When the mapping logic is applied
+    Then the output must contain:
+      | field | value       |
+      | iban  | DE123456789 |  <-- Woher kommt dieser Wert?
+      | tax   | VAT_DE      |  <-- "Magisches" Wissen
+```
+
+**Konsequenz:**
+Der resultierende Code wird diesen Wert fest verdrahten (`const IBAN = "DE123456789"`). Der Test ist damit wertlos, da er keine allgemeingültige Logik prüft, sondern nur die Übereinstimmung zweier statischer Texte.
+
+**Best Practice (Anti-Hardcoding Strategie):**
+1.  **Vollständigkeit:** Ergänzen Sie den `Given`-Block um alle notwendigen Quelldaten.
+2.  **Varianz (Der "Bob-Test"):** Erstellen Sie immer mindestens zwei Szenarien (z.B. mittels `Scenario Outline`) mit unterschiedlichen Werten für dieselben Felder. Wenn die Implementierung einen Wert hardcodiert hat, wird das zweite Szenario zwangsläufig fehlschlagen. Nur so lässt sich beweisen, dass die Logik tatsächlich **generisch** arbeitet.
+
 ## 3. Komplexe Datenstrukturen und Payloads
 
 Für Enterprise-Anwendungen reicht die Übergabe einfacher Schlüssel-Wert-Paare oft nicht aus. Komplexe Geschäftsobjekte, JSON-Payloads oder Datenbank-Schemata müssen mittels **DocStrings** (Triple-Quotes) direkt im Szenario abgebildet werden. Dies stellt sicher, dass auch komplexe Validierungslogik für Fachexperten lesbar bleibt.
