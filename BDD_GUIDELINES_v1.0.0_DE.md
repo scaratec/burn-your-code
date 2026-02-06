@@ -1,5 +1,7 @@
 # AI-Driven Behavior Driven Development: Ein technischer Leitfaden für die Software-Entwicklung
 
+**Version: 1.0.0**
+
 ## Präambel
 
 Die vorliegenden Richtlinien definieren den standardisierten Prozess für die Software-Entwicklung. Sie markieren einen Paradigmenwechsel von der klassischen Programmierung hin zu einer spezifikationsgetriebenen Entwicklung, bei der Künstliche Intelligenz als exekutives Werkzeug fungiert. In diesem Modell ist das Feature-File, formuliert in der Gherkin-Syntax, die alleinige Quelle der Wahrheit ("Single Source of Truth").
@@ -376,6 +378,37 @@ Der Agent generiert einen `http.server`, der *genau* die benötigten Endpoints i
 
 **Konsequenz & Fazit:**
 **Shift-LeftTesting**. Wir können Integrationstests schreiben, noch bevor das echte Nachbarsystem verfügbar oder lizenziert ist. Die Abhängigkeit von externen Teams entfällt.
+
+### 6.4 Resilient Testing: Eventual Consistency Patterns
+
+In verteilten Cloud-Systemen ist "Sofortigkeit" eine Illusion. Operationen wie das Propagieren von Secrets, das Starten von Containern (Cold Starts) oder das Zustellen von Nachrichten (Pub/Sub) benötigen Zeit. Tests, die Zustände *einmalig* prüfen und bei einem Fehler sofort abbrechen, führen zu "Flaky Tests".
+
+**Strategie: Polling mit Timeout**
+Statt eines einfachen `assert` nutzen wir eine Retry-Schleife. Der Test gilt erst dann als gescheitert, wenn der gewünschte Zustand nach Ablauf einer definierten Zeitspanne (z.B. 60 Sekunden) nicht eingetreten ist. Tritt er früher ein, fährt der Test sofort fort.
+
+**Beispiel Code (Python):**
+```python
+max_retries = 10
+success = False
+
+for i in range(max_retries):
+    try:
+        # Versuche die Aktion oder Prüfung
+        check_remote_state()
+        success = True
+        break
+    except (AssertionError, ConnectionError):
+        print(f"Waiting for consistency (Attempt {i+1}/{max_retries})...")
+        time.sleep(5) # Exponential Backoff empfohlen
+
+if not success:
+    raise AssertionError("State not reached within timeout")
+```
+
+**Anwendungsfälle:**
+1.  **Traffic Senden:** Ein `requests.post` auf einen Cloud Run Service kann beim ersten Versuch (Kaltstart) fehlschlagen. -> Retry Loop.
+2.  **Secret Validierung:** Ein neu angelegtes Secret ist eventuell erst nach einigen Sekunden via API sichtbar. -> Polling.
+3.  **Asynchrone Events:** Das Warten auf eine Pub/Sub Nachricht erfordert zwingend ein Polling des Subscribers.
 
 ## 7. Der iterative Prozess (Red/Green)
 
