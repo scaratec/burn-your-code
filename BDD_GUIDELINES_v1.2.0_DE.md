@@ -1,6 +1,6 @@
 # AI-Driven Behavior Driven Development: Ein technischer Leitfaden für die Software-Entwicklung
 
-**Version: 1.1.0**
+**Version: 1.2.0**
 
 ## Präambel
 
@@ -434,6 +434,51 @@ Die Entwicklung folgt einem strikten iterativen Prozess.
 1.  **Red State:** Anforderung im Feature-File formulieren -> `behave` scheitert.
 2.  **Implementation:** KI generiert Code (App + Steps).
 3.  **Green State:** `make test` läuft durch.
+
+## 8. Beweisführung und Incident-Analyse durch BDD (New in 1.2.0)
+
+BDD ist nicht nur ein Entwicklungswerkzeug, sondern auch ein mächtiges Instrument zur **Ursachenanalyse und Beweisführung** (Forensic Engineering) in komplexen, verteilten Systemen.
+
+### 8.1 Reproduktion von "Heisenbugs" (Referenz: Checkout-Service)
+
+Verteilte Systeme leiden oft unter Fehlern, die nur sporadisch oder unter spezifischen Bedingungen auftreten (z.B. Race Conditions, verlorene asynchrone Nachrichten). BDD ermöglicht es, diese Bedingungen deterministisch nachzustellen.
+
+*Feature File:*
+```gherkin
+Scenario: Race Condition - Notification Lost
+    # Simuliere den Zustand: User kommt zurück, aber Backend-Nachricht fehlt
+    When a customer returns from Payment Provider with a successful payment
+    And the async server-to-server notification is blocked/lost
+    Then the Order Service should have received a payment update immediately
+```
+
+**Technische Umsetzung (Isolierte Simulation):**
+Anstatt auf das echte Drittsystem zu warten, simuliert der Testschritt exakt den HTTP-Aufruf, den der Browser des Kunden machen würde (Redirect), und unterdrückt bewusst den parallelen Server-Call.
+
+### 8.2 Der Test als Beweisstück
+
+Ein fehlschlagender BDD-Test ist der ultimative Beweis für die Existenz eines Bugs und dessen Ursache. Er dokumentiert den **Ist-Zustand** unwiderlegbar.
+
+*   **Vor dem Fix:** Der Test `Race Condition - Notification Lost` schlägt fehl -> Beweis: Das System verlässt sich fälschlicherweise ausschließlich auf die asynchrone Nachricht.
+*   **Nach dem Fix:** Der Test läuft grün -> Beweis: Der Fix (z.B. redundantes Update beim Redirect) funktioniert.
+
+### 8.3 Simulation von Sicherheitsprotokollen
+
+Um realistische Interaktionen mit externen Dienstleistern (z.B. Payment Providern) zu testen, müssen Sicherheitsprotokolle (Verschlüsselung, Signaturen) im Test-Code nachgebildet werden.
+
+**Best Practice:**
+Implementieren Sie die Verschlüsselungslogik des Drittanbieters (z.B. Blowfish, HMAC) direkt in den Python-Steps. Dies erlaubt es, **valide**, signierte Requests zu generieren, die vom zu testenden Service akzeptiert werden, ohne dass ein echter Provider involviert ist.
+
+```python
+# Beispiel: Generierung einer validen Payment-Redirect-URL im Test
+encrypted_data = cipher.encrypt(f"PayID={pay_id}...".encode('utf-8'))
+mac = hmac.new(key, msg, digestmod=sha256).hexdigest()
+url = f"http://service/finalize?Data={encrypted_data}&MAC={mac}"
+requests.get(url)
+```
+
+**Konsequenz & Fazit:**
+Dies ermöglicht Tests gegen die **echte, unveränderte Applikationslogik** (inklusive Security-Filtern) und vermeidet das Risiko, dass Tests erfolgreich sind, weil Sicherheitschecks für "Test-Profile" deaktiviert wurden.
 
 ## Schlusswort
 
