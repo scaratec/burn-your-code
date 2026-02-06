@@ -1,6 +1,6 @@
 # AI-Driven Behavior Driven Development: Ein technischer Leitfaden für die Software-Entwicklung
 
-**Version: 1.0.0**
+**Version: 1.1.0**
 
 ## Präambel
 
@@ -85,6 +85,15 @@ Der resultierende Code wird diesen Wert fest verdrahten (`const IBAN = "DE123456
 **Best Practice (Anti-Hardcoding Strategie):**
 1.  **Vollständigkeit:** Ergänzen Sie den `Given`-Block um alle notwendigen Quelldaten.
 2.  **Varianz (Der "Bob-Test"):** Erstellen Sie immer mindestens zwei Szenarien (z.B. mittels `Scenario Outline`) mit unterschiedlichen Werten für dieselben Felder. Wenn die Implementierung einen Wert hardcodiert hat, wird das zweite Szenario zwangsläufig fehlschlagen. Nur so lässt sich beweisen, dass die Logik tatsächlich **generisch** arbeitet.
+
+### 2.3 Trennung von Stamm- und Bewegungsdaten
+
+Bei komplexen Geschäftsobjekten (z.B. Rechnungen) sollten statische Konfigurationen (Stammdaten) von fallbezogenen Daten (Bewegungsdaten) getrennt werden.
+
+*   **Stammdaten (Issuer Config):** Diese sollten **explizit** im `Given`-Block als JSON/DocString definiert werden. Dies schafft Transparenz über die Konfiguration des Systems ("Wer bin ich?").
+*   **Bewegungsdaten (Invoice Data):** Diese können ebenfalls explizit übergeben oder - wenn der Fokus auf der Verarbeitung echter Artefakte liegt - referenziert werden ("Given the invoice data matches 'invoice_01.json'").
+
+Dies verhindert, dass Feature-Files durch die Wiederholung statischer Daten unlesbar werden, ohne die Anforderung der Vollständigkeit zu verletzen.
 
 ## 3. Komplexe Datenstrukturen und Payloads
 
@@ -204,6 +213,14 @@ def step_impl(context):
 
 **Konsequenz & Fazit:**
 Logging wird zum **First-Class Feature**. Der Test erzwingt, dass die Applikation strukturierte, maschinenlesbare Logs (JSON) schreibt, anstatt unstrukturierte Textwüsten. Dies garantiert die Integrierbarkeit in Monitoring-Systeme (ELK, Splunk) ab Tag 1.
+
+### 3.4 Umgang mit Legacy-Daten (Garbage In)
+
+Wenn Systeme unstrukturierte oder unsichere Eingaben (z.B. OCR von Word-PDFs) verarbeiten müssen, definieren Sie Szenarien für den "Sad Path" explizit.
+
+*   **Trennungsprinzip:** Trennen Sie den unsicheren Extraktor ("Rate mal was das ist") vom sicheren Generator ("Erzeuge valides Ergebnis aus validen Daten").
+*   **Test-Fokus:** Testen Sie den Generator (Core-Logik) nur mit validen oder explizit invaliden (aber strukturierten) Daten, um "Flaky Tests" durch unzuverlässige OCR zu vermeiden.
+*   **Fail Fast:** Legen Sie im Test fest, dass bei Inkonsistenzen (z.B. fehlende Pflichtfelder nach der Extraktion) der Prozess kontrolliert abbricht, statt invalide Ergebnisse zu produzieren.
 
 ## 4. Technische Isolation und Architektur
 
