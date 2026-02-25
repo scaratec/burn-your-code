@@ -1,0 +1,14 @@
+# Python virtual environment
+.venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Behave artifacts
+JSON_reports/
+junit_reports/
