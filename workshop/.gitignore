@@ -12,3 +12,6 @@ __pycache__/
 # Behave artifacts
 JSON_reports/
 junit_reports/
+
+# IDE files
+.idea/
