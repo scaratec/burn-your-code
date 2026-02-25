@@ -8,8 +8,8 @@ Feature: Geofence Processor Service (Service B)
     # Explicit configuration of the service (Guideline 2.1)
     Given the geofence-processor is configured with:
       | key                       | value                     |
-      | port                      | 8080                      |
-      | firestore-emulator-host   | localhost:8080            |
+      | port                      | 8081                      |
+      | firestore-emulator-host   | localhost:8082            |
       | pubsub-emulator-host      | localhost:8085            |
       | firestore-project-id      | equiguard-test            |
 
