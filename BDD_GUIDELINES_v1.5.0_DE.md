@@ -1,6 +1,6 @@
 # AI-Driven Behavior Driven Development: Ein technischer Leitfaden für die Software-Entwicklung
 
-**Version: 1.4.0**
+**Version: 1.5.0**
 
 ## Präambel
 
@@ -290,6 +290,9 @@ def step_impl(context):
 **Konsequenz & Fazit:**
 Das BDD-Framework zwingt den Entwickler (oder die KI), den C-Code in **kleine, streng isolierte Bibliotheken** (z.B. `gcs_auth.c`, `gcs_utils.c`) zu schneiden, deren Ein- und Ausgänge (Pointers) deterministisch kontrolliert werden können. 
 Ein erfolgreicher BDD-Test auf dieser Ebene ist ein mathematischer Beweis dafür, dass der C-Code für den getesteten Pfad keine Speicherverletzungen verursacht. Der Python-Test übernimmt hierbei de facto die Rolle eines deterministischen "Fuzzers" oder "Valgrinds".
+
+**Empirischer Beweis architektonischer Annahmen:**
+Oft existieren in der Software-Entwicklung "theoretische Ängste" (z.B. "Ein synchroner C-Call blockiert den gesamten Server"). BDD ermöglicht es, diese Ängste empirisch zu entkräften. Im Fall des Dovecot GCS Plugins wurde per BDD-Test eine künstliche Netzwerklatenz von 5 Sekunden in den synchronen Upload injiziert. Der Test bewies, dass Dovecot durch sein internes `fs-wrapper`-Design den synchronen Call im Hintergrund puffert – der IMAP-Client erhielt seine Erfolgsmeldung in Millisekunden. BDD beweist hier, dass komplexe asynchrone I/O-Logik im C-Code (Technical Debt) überflüssig ist, da das umgebende Framework die Synchronität abfedert. Das spart massiv Entwicklungszeit.
 
 ## 5. UI-Testing und Browser-Automatisierung (New in 1.4.0)
 
