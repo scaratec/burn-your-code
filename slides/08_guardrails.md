@@ -1,5 +1,6 @@
 # Guardrails Against Hallucination
 
 Gherkin is more precise than prose.
-The test runner (`behave`) is the incorruptible gatekeeper.
-The agent cannot "get creative" or deviate as long as the test enforces discipline.
+Tests constrain the agent.
+But `all green` can still be dishonest.
+Step code needs human review.
