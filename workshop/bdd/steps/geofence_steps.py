@@ -41,7 +41,7 @@ def step_when_run_library_test(context, command):
         }
         
         # Aufruf des Go CLI Wrappers gemäß BDD Guideline 5.1
-        cmd = ["go", "run", "cmd/geofence-lib-test/main.go"]
+        cmd = ["go", "run", "./cmd/geofence-lib-test/"]
         
         process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = process.communicate(input=json.dumps(payload))
