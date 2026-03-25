@@ -1,10 +1,10 @@
 # Single Source of Truth
 
 The `.feature` file (Gherkin) is more than just documentation or a test.
-It is the sole contract and the deterministic prompt.
-Everything else is a derivative.
+It is the primary contract for business behavior and the most reliable prompt for the agent.
+Everything else should align with it.
 
 **No Magic Values!**
 If data (like ports, IBANs, or API endpoints) is missing from the spec, the AI will hardcode it. 
-The feature file must contain 100% of the runtime configuration and expected payloads. 
+The feature file must contain the business-relevant inputs, examples, and expected outputs. 
 We enforce generic implementations through scenario variance (The "Bob-Test").

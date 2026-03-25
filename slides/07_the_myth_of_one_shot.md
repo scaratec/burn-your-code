@@ -9,5 +9,5 @@ We don't generate the whole app at once. We write *one* scenario, the agent impl
 If a developer manually changes the implementation code (`.go`, `.py`, `.java`) without updating the `.feature` file, they create technical debt immediately. 
 
 **3. The Golden Rule**
-If a behavior isn't documented in the feature file, it doesn't exist. The agent might overwrite your manual "hotfix" during the next refactoring cycle because it isn't protected by a test. 
+If a behavior isn't documented in the feature file, it is poorly protected. The agent might overwrite your manual "hotfix" during the next refactoring cycle because it isn't protected by a test. 
 **To change the code, you must change the spec.**

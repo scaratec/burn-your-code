@@ -5,7 +5,7 @@ A team is paralyzed debating the tech stack for a new microservice. Java? Go? Ko
 
 **The BDD Solution:**
 We ignore the tech stack and define the behavior first in Gherkin. 
-While the team is still arguing over syntax, the AI agent implements the service in *all three languages* within a single afternoon.
+In the best case, the AI agent can sketch or even implement the service in *multiple languages* quickly enough that the discussion shifts from preference to evidence.
 
 **The Proof:**
 One single suite of BDD tests (`bdd/*.feature`) executes against:
@@ -14,4 +14,4 @@ One single suite of BDD tests (`bdd/*.feature`) executes against:
 - `implementations/kotlin/`
 
 **The Outcome:**
-Code is genuinely disposable. We choose the implementation that best fits the operational constraints, because the tests guarantee that all three behave identically. We shifted the discussion from "What language do we prefer?" to "Which binary has the best memory footprint?"
+Code becomes much easier to compare and replace. We choose the implementation that best fits the operational constraints, because the same tests validate equivalent behavior across variants. We shifted the discussion from "What language do we prefer?" to "Which implementation fits our constraints best?"
