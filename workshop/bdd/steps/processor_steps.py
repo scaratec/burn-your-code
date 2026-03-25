@@ -29,17 +29,22 @@ def step_given_processor_config(context):
     
     # Create firestore client for the test
     context.db = firestore.Client(project=context.project_id)
-    
-    # Compile the Go app if not already compiled
-    if not hasattr(context, 'go_compiled'):
-        subprocess.run(["go", "build", "-o", "bin/geofence-processor", "./cmd/geofence-processor/"], check=True)
-        context.go_compiled = True
-        
-    # Start the Go app
+
+    # Start the pre-built Go binary (built by `make build` before test-mi2)
     context.processor_process = subprocess.Popen(["./bin/geofence-processor"], env=env)
-    
-    # Wait for the server to be ready
-    time.sleep(1)
+
+    # Poll health endpoint until ready (Guideline 6.4 — no fixed sleeps)
+    deadline = time.time() + 10.0
+    while time.time() < deadline:
+        try:
+            r = requests.get(f"http://localhost:{context.processor_port}/health", timeout=1)
+            if r.status_code == 200:
+                break
+        except Exception:
+            pass
+        time.sleep(0.2)
+    else:
+        raise RuntimeError("geofence-processor did not become healthy within 10 seconds")
 
 
 @given('the Firestore collection "{collection}" contains the document "{document_id}":')
@@ -76,43 +81,26 @@ def step_then_eventually_contains(context, collection, device_id):
     for row in context.table:
         expected_data[row["field"]] = row["value"]
         
-    max_retries = 20
-    delay_seconds = 0.5
-    success = False
-    
-    for i in range(max_retries):
+    deadline = time.time() + 10.0
+    while time.time() < deadline:
         try:
-            # Check Firestore
             docs = context.db.collection(collection).where("device", "==", device_id).stream()
             for doc in docs:
                 doc_dict = doc.to_dict()
-                # Check if all expected fields match
-                matches = True
-                for k, v in expected_data.items():
-                    if doc_dict.get(k) != v:
-                        matches = False
-                        break
-                if matches:
-                    success = True
-                    break
-        except Exception as e:
+                if all(doc_dict.get(k) == v for k, v in expected_data.items()):
+                    return
+        except Exception:
             pass
-            
-        if success:
-            break
-            
-        print(f"Waiting for async Firestore write (Attempt {i+1}/{max_retries})...")
-        time.sleep(delay_seconds)
-        
-    if not success:
-        raise AssertionError(f"Alert not written to Firestore within timeout for device {device_id}")
+        time.sleep(0.5)
+
+    raise AssertionError(f"Alert not written to Firestore within timeout for device {device_id}")
 
 
 @then('the Firestore collection "{collection}" should not contain a record for "{device_id}" within {seconds:d} seconds')
 def step_then_should_not_contain(context, collection, device_id, seconds):
-    # Wait the given seconds
-    time.sleep(seconds)
-    
-    docs = list(context.db.collection(collection).where("device", "==", device_id).stream())
-    if len(docs) > 0:
-        raise AssertionError(f"Found unexpected record for device {device_id}")
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        docs = list(context.db.collection(collection).where("device", "==", device_id).stream())
+        if len(docs) > 0:
+            raise AssertionError(f"Found unexpected record for device {device_id}")
+        time.sleep(0.5)

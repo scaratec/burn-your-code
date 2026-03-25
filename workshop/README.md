@@ -1,79 +1,180 @@
-# **Workshop: EquiGuard – AI-Driven Geofencing & Event-Driven Architecture**
+# Workshop: EquiGuard – AI-Driven Geofencing & Event-Driven Architecture
 
-## **About the Project**
+## About the Project
 
-This project serves as a practical demonstration for the presentation **"Burn Your Code: Feature Files as the Ultimate AI Agent Prompt"**. We implement a high-precision, event-driven architecture on Google Cloud, where the entire business logic and infrastructure configuration are defined exclusively through **Gherkin Feature Files**.
+This project is the hands-on workshop for the presentation
+**"Burn Your Code: Feature Files as the Ultimate AI Agent Prompt"**.
+We build a high-precision, event-driven geofencing system on Google Cloud
+where the entire business logic and infrastructure configuration are driven
+exclusively by **Gherkin Feature Files**.
 
-### **The Case: "EquiGuard Dreilingen"**
+### The Case: "EquiGuard Dreilingen"
 
-We monitor the pasture areas in Dreilingen (Heidewiese). Using GPS telemetry, the system determines in real-time whether horses (e.g., Lilly or Honey) have left the predefined geofence.
+We monitor the pasture areas in Dreilingen (Heidewiese). Using GPS telemetry,
+the system determines in real-time whether horses (e.g., Lilly or Honey) have
+left the predefined geofence.
 
-## **The Architecture**
+---
 
-The system is designed according to the **Ports & Adapters (Hexagonal)** principle and utilizes Google Cloud Native services for decoupling.
+## Architecture
 
-1. **Service A (Telemetry Ingress):** A Cloud Run service that receives GPS data via webhook (curl) and publishes it as an event to Pub/Sub.  
-2. **Messaging:** Google Cloud Pub/Sub acts as an asynchronous buffer and decoupling layer.  
-3. **Service B (Geofence Processor):** A Cloud Run service that reacts to events, performs geofence validation against the KML data, and persists alerts in **Firestore**.
+The system follows **Ports & Adapters (Hexagonal Architecture)**:
 
-## **Single Source of Truth: The Feature File**
+```
+GPS Telemetry
+     │
+     ▼
+Pub/Sub Topic (equiguard-telemetry)
+     │
+     ▼ push subscription
+Cloud Run: geofence-processor
+     │  reads geofence polygon
+     ├──────────────────────► Firestore (geofences/)
+     │  writes alert on violation
+     └──────────────────────► Firestore (alerts/)
+```
 
-In accordance with **BDD Guideline v1.2.0**, we do not use hardcoded coordinates in the program code. The polygon vertices are taken directly from the geofence.kml and are stored in the Feature File.
+---
 
-### **Example Specification (bdd/geofence.feature)**
+## Milestones
 
-Feature: Precise Geofence Monitoring
+The workshop is structured in four milestones of increasing complexity.
+Each milestone uses the same Gherkin feature files — only the execution
+environment changes.
 
-  Scenario: Alert when a horse leaves the KML-defined pasture  
-    Given the geofence "HomePasture" is defined by the following polygon:  
-      | longitude  | latitude   |  
-      | 9.6096319  | 53.2278606 |  
-      | 9.6147013  | 53.2273050 |  
-      | 9.6147281  | 53.2282170 |  
-      | 9.6120513  | 53.2285285 |  
-      | 9.6096319  | 53.2278606 |
+### MI1 — Geofence Library (`@mi1`)
 
-    When a telemetry update is received for "Lilly":  
-      """  
-      {  
-        "lon": 9.6050000,  
-        "lat": 53.2300000,  
-        "timestamp": "2026-02-25T14:00:00Z"  
-      }  
-      """
+Tests the core point-in-polygon algorithm in isolation. No network, no
+services. The Python step code calls a Go CLI wrapper via subprocess.
 
-    Then the Firestore collection "alerts" should eventually contain a record:  
-      | field    | value              |  
-      | device   | Lilly              |  
-      | type     | GEOFENCE\_VIOLATION |  
-      | zone     | HomePasture        |
+```bash
+make test-mi1
+```
 
-## **Workshop Flow (Red/Green)**
+Requirements: Go 1.22+, Python 3.11+
 
-1. **Definition:** The Human Architect writes the Feature File using the real KML coordinates.  
-2. **Execution (Red):** The test run fails because neither the Ingress service nor the Processor exists yet.  
-3. **AI Synthesis:** An AI agent generates the following based on the Feature File and the guidelines:  
-   * Go/Python code for both Cloud Run services.  
-   * Dockerfile and Cloud Build configuration.  
-   * Firestore data modeling.  
-4. **Validation (Green):** A curl request simulates the horse being outside the pasture; the test automatically verifies the entry in Firestore.
+---
 
-## **Execution & Trigger**
+### MI2 — Geofence Processor with Emulators (`@mi2`)
 
-To manually simulate a geofence violation after deployment, use the following command:
+Tests the full HTTP service locally using the **Firestore emulator** and
+**Pub/Sub emulator**. Emulators are started and stopped automatically.
 
-curl \-X POST \[https://ingress-service-xyz.a.run.app/telemetry\](https://ingress-service-xyz.a.run.app/telemetry) \\  
-     \-H "Content-Type: application/json" \\  
-     \-d '{  
-       "horse\_id": "Lilly",  
-       "location": {"lat": 53.2300, "lon": 9.6050},  
-       "timestamp": "2026-02-25T14:10:00Z"  
-     }'
+```bash
+make test-mi2
+```
 
-## **Guardrails Against Hallucination**
+`make test-mi2` starts both emulators, runs the scenarios, and stops
+everything — even on failure.
 
-* **Technical Isolation:** Tests run in an isolated .venv.  
-* **Eventual Consistency:** We use polling with a timeout (Guideline 6.4) to wait for the asynchronous Firestore entry.  
-* **No Magic Values:** All validation parameters must be visible in the Gherkin text.
+To manage emulators manually:
 
-*Created for the presentation: Burn Your Code – Feature Files as the Ultimate Prompt.*
+```bash
+make start-emulators   # Firestore on :8082 (npx firebase-tools), Pub/Sub on :8085 (Docker)
+make stop-emulators    # stop and remove all emulators
+```
+
+**Emulator requirements:**
+- Firestore: Node.js 18+ with `npx` (firebase-tools downloads the JAR on first run)
+- Pub/Sub: Docker + `gcr.io/google.com/cloudsdktool/cloud-sdk:latest`
+
+Requirements: MI1 + Node.js 18+ + Docker
+
+---
+
+### MI3 — OCI Image (`@mi3`)
+
+Builds the geofence-processor Docker image and tests it as a running
+container. Validates health check, port binding, and full behavioural
+equivalence with MI2.
+
+```bash
+make test-mi3
+```
+
+Requirements: MI2 + Docker
+
+---
+
+### MI4 — Cloud Run on Live GCP (`@mi4`)
+
+> **⚠ WARNING: This milestone uses real GCP resources and incurs costs.**
+> It is intended for use with Google Cloud credits provided for this workshop.
+> Always run `make teardown-mi4` after the session to stop billing.
+
+This is where it gets real. The same Gherkin scenarios that passed locally
+in MI1–MI3 now run against a live Cloud Run service, real Firestore, and
+real Pub/Sub — without changing a single line of the feature file.
+
+#### Prerequisites
+
+| Requirement | How to verify |
+|---|---|
+| GCP project `randy-gupta-poc` with billing enabled | `gcloud projects describe randy-gupta-poc` |
+| Application Default Credentials | `gcloud auth application-default login` |
+| Terraform ≥ 1.7 | `terraform version` |
+| Docker authenticated for Artifact Registry | `make auth-registry` |
+| MI3 image built locally | `docker images equiguard/geofence-processor:test` |
+
+#### Required GCP APIs
+
+The following APIs must be enabled (Terraform handles this automatically):
+
+- `run.googleapis.com`
+- `pubsub.googleapis.com`
+- `firestore.googleapis.com`
+- `artifactregistry.googleapis.com`
+
+#### Step-by-Step
+
+```bash
+# 1. Build and push the container image to Artifact Registry
+make push-image
+
+# 2. Provision all GCP resources via Terraform
+#    (Artifact Registry repo, Cloud Run service, Pub/Sub topic + subscription)
+make tf-apply
+
+# 3. Run the MI4 BDD tests against the live service
+make test-mi4
+```
+
+#### What Terraform provisions
+
+| Resource | Name | Description |
+|---|---|---|
+| Artifact Registry | `equiguard` | Docker repository for container images |
+| Cloud Run | `geofence-processor` | HTTP service, region `europe-west3` |
+| Pub/Sub Topic | `equiguard-telemetry` | Receives GPS telemetry events |
+| Pub/Sub Subscription | `equiguard-telemetry-push-sub` | Push → Cloud Run `/telemetry-push` |
+
+All values are defined in `terraform/terraform.tfvars` and mirrored in the
+Gherkin Background table — no magic values anywhere.
+
+#### Teardown
+
+Run this after the workshop to destroy all GCP resources and stop billing:
+
+```bash
+make teardown-mi4
+```
+
+This runs `terraform destroy` and requires manual confirmation.
+
+---
+
+## Guardrails Against Hallucination
+
+- **No Magic Values:** All ports, IBANs, coordinates, and env vars are
+  explicit in the Gherkin file (BDD Guideline 2.1).
+- **Eventual Consistency:** Assertions use polling with deadlines instead
+  of fixed sleeps (BDD Guideline 6.4).
+- **Behavioural Equivalence:** MI4 uses the identical payloads as MI2/MI3.
+  If MI4 fails where MI2 passes, the problem is infrastructure — not logic.
+- **Test Isolation:** Firestore data is cleared after each scenario in all
+  milestones (emulator bulk-delete for MI1–MI3, document-level delete for MI4).
+
+---
+
+*Created for the presentation: Burn Your Code – Feature Files as the
+Ultimate AI Agent Prompt.*

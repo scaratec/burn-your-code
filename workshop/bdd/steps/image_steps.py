@@ -49,7 +49,12 @@ def step_start_container(context):
         raise RuntimeError(f"docker run failed:\n{result.stderr}")
 
     context.container_id = result.stdout.strip()
-    context.container_port = host_port
+    # With --network=host port mapping is not used: the service listens
+    # directly on container_port on the host. With bridge networking
+    # host_port is the externally reachable port.
+    context.container_port = container_port if network == "host" else host_port
+    context.container_network = network
+    context.container_port_internal = container_port
     context.project_id = env_vars.get("PROJECT_ID", "equiguard-test")
 
     os.environ["FIRESTORE_EMULATOR_HOST"] = env_vars.get(
@@ -85,6 +90,20 @@ def step_health_check(context, method_path, expected_status, timeout):
 
 @then("the container should listen on port {expected_port:d}")
 def step_check_port(context, expected_port):
+    if getattr(context, "container_network", "bridge") == "host":
+        # With host networking docker inspect shows no port bindings.
+        # Verify directly that the host port is open.
+        result = subprocess.run(
+            ["ss", "-tlnH", f"sport = :{expected_port}"],
+            capture_output=True,
+            text=True,
+        )
+        assert result.stdout.strip(), (
+            f"Expected port {expected_port} to be listening on host"
+            " (--network=host container), but ss found nothing."
+        )
+        return
+
     result = subprocess.run(
         [
             "docker", "inspect",

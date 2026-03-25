@@ -16,5 +16,11 @@ junit_reports/
 # Go binaries
 bin/
 
+# Terraform state and local cache
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+
 # IDE files
 .idea/
