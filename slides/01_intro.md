@@ -1,4 +1,7 @@
-# Burn Your Code: Feature Files as the Ultimate AI Agent Prompt
+# Burn Your Code
 
-AI is fast.
-Control is rare.
+You describe. The AI codes. You ship.
+
+Feels like magic.
+Works until it doesn't.
+No one knows why.
