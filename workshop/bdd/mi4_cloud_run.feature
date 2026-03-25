@@ -64,6 +64,7 @@ Feature: Geofence Processor on Cloud Run (Live GCP)
     When a Pub/Sub message is published to topic "equiguard-telemetry" for "Lilly":
       """
       {
+        "device": "Lilly",
         "lon": 9.6116704,
         "lat": 53.2275266,
         "timestamp": "2026-02-25T14:00:00Z",
@@ -80,6 +81,7 @@ Feature: Geofence Processor on Cloud Run (Live GCP)
     When a Pub/Sub message is published to topic "equiguard-telemetry" for "Honey":
       """
       {
+        "device": "Honey",
         "lon": 9.6113700,
         "lat": 53.2280821,
         "timestamp": "2026-02-25T14:05:00Z",

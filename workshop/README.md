@@ -128,14 +128,13 @@ The following APIs must be enabled (Terraform handles this automatically):
 #### Step-by-Step
 
 ```bash
-# 1. Build and push the container image to Artifact Registry
-make push-image
-
-# 2. Provision all GCP resources via Terraform
-#    (Artifact Registry repo, Cloud Run service, Pub/Sub topic + subscription)
+# 1. Provision all GCP resources and deploy the image in one step:
+#    - Phase 1: creates the Artifact Registry repository
+#    - pushes the container image
+#    - Phase 2: deploys Cloud Run, Pub/Sub topic + push subscription
 make tf-apply
 
-# 3. Run the MI4 BDD tests against the live service
+# 2. Run the MI4 BDD tests against the live service
 make test-mi4
 ```
 

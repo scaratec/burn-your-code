@@ -164,7 +164,12 @@ tf-init:
 	terraform -chdir=terraform init -input=false
 
 tf-apply: tf-init
-	@echo "Provisioning GCP resources (project: $(PROJECT))..."
+	@echo "Phase 1: provisioning Artifact Registry..."
+	terraform -chdir=terraform apply -auto-approve -input=false \
+		-target=google_artifact_registry_repository.equiguard
+	@echo "Pushing image to registry..."
+	$(MAKE) --no-print-directory push-image
+	@echo "Phase 2: provisioning Cloud Run, Pub/Sub, and subscription..."
 	terraform -chdir=terraform apply -auto-approve -input=false
 
 # ---------------------------------------------------------------------------

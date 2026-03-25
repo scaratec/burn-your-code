@@ -129,7 +129,6 @@ def step_check_port(context, expected_port):
 )
 def step_container_pubsub_push(context, endpoint, device_id):
     payload = json.loads(context.text)
-    payload["device"] = device_id
 
     b64_data = base64.b64encode(
         json.dumps(payload).encode("utf-8")
