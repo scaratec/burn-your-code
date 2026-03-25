@@ -29,6 +29,14 @@ def step_cloud_config(context):
 
 @given("the infrastructure is provisioned with Terraform")
 def step_terraform_apply(context):
+    # Run terraform only once per feature run, not before every scenario.
+    # Subsequent scenarios reuse the outputs stored on context.feature.
+    if getattr(context.feature, "_tf_applied", False):
+        context.cloud_run_url = context.feature._tf_cloud_run_url
+        context.topic_path    = context.feature._tf_topic_path
+        context.publisher     = context.feature._tf_publisher
+        return
+
     # terraform init — safe to run repeatedly
     subprocess.run(
         ["terraform", "init", "-input=false"],
@@ -36,7 +44,7 @@ def step_terraform_apply(context):
         check=True,
     )
 
-    # terraform apply — idempotent, only changes drift
+    # terraform apply — idempotent, only provisions drift
     result = subprocess.run(
         ["terraform", "apply", "-auto-approve", "-input=false"],
         cwd=_TERRAFORM_DIR,
@@ -57,8 +65,14 @@ def step_terraform_apply(context):
     outputs = json.loads(output_result.stdout)
 
     context.cloud_run_url = outputs["cloud_run_url"]["value"]
-    context.topic_path = outputs["topic_path"]["value"]
-    context.publisher = pubsub_v1.PublisherClient()
+    context.topic_path    = outputs["topic_path"]["value"]
+    context.publisher     = pubsub_v1.PublisherClient()
+
+    # Cache on feature so the next scenario skips the apply
+    context.feature._tf_applied      = True
+    context.feature._tf_cloud_run_url = context.cloud_run_url
+    context.feature._tf_topic_path    = context.topic_path
+    context.feature._tf_publisher     = context.publisher
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +85,6 @@ def step_terraform_apply(context):
 )
 def step_publish_pubsub(context, topic, device_id):
     payload = json.loads(context.text)
-    payload["device"] = device_id
 
     data = json.dumps(payload).encode("utf-8")
     # Block until the message is confirmed by the Pub/Sub service

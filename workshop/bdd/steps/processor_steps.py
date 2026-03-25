@@ -56,9 +56,7 @@ def step_given_firestore_doc(context, collection, document_id):
 @when('the service receives a Pub/Sub push event on "{endpoint}" for "{device_id}":')
 def step_when_pubsub_push(context, endpoint, device_id):
     payload = json.loads(context.text)
-    # Inject device_id so the processor knows which horse it is
-    payload["device"] = device_id
-    
+
     # Wrap in Pub/Sub push format
     data_bytes = json.dumps(payload).encode("utf-8")
     b64_data = base64.b64encode(data_bytes).decode("utf-8")

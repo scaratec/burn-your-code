@@ -32,6 +32,7 @@ Feature: Geofence Processor Service (Service B)
     When the service receives a Pub/Sub push event on "/telemetry-push" for "Lilly":
       """
       {
+        "device": "Lilly",
         "lon": 9.6116704,
         "lat": 53.2275266,
         "timestamp": "2026-02-25T14:00:00Z",
@@ -49,6 +50,7 @@ Feature: Geofence Processor Service (Service B)
     When the service receives a Pub/Sub push event on "/telemetry-push" for "Honey":
       """
       {
+        "device": "Honey",
         "lon": 9.6113700,
         "lat": 53.2280821,
         "timestamp": "2026-02-25T14:05:00Z",
