@@ -13,5 +13,8 @@ __pycache__/
 JSON_reports/
 junit_reports/
 
+# Go binaries
+bin/
+
 # IDE files
 .idea/

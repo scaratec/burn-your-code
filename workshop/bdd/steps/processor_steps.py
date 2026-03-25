@@ -32,7 +32,7 @@ def step_given_processor_config(context):
     
     # Compile the Go app if not already compiled
     if not hasattr(context, 'go_compiled'):
-        subprocess.run(["go", "build", "-o", "bin/geofence-processor", "cmd/geofence-processor/main.go"], check=True)
+        subprocess.run(["go", "build", "-o", "bin/geofence-processor", "./cmd/geofence-processor/"], check=True)
         context.go_compiled = True
         
     # Start the Go app
