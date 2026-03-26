@@ -49,6 +49,9 @@ This single command:
 3. Resolves Go module dependencies (`go mod tidy`)
 4. Creates the `bin/` directory for compiled binaries
 
+`make test-mi4` uses `make setup-python` instead of `make setup` — it
+only installs Python dependencies because MI4 does not need Go binaries.
+
 ### Upgrading Python dependencies
 
 Dependencies are pinned in `requirements.txt` at the patch level. To upgrade:
@@ -142,15 +145,22 @@ This is where it gets real. The same Gherkin scenarios that passed locally
 in MI1–MI3 now run against a live Cloud Run service, real Firestore, and
 real Pub/Sub — without changing a single line of the feature file.
 
+#### Participant setup — one edit required
+
+Open `bdd/mi4_cloud_run.feature` and change the `project_id` value in
+the Background table to your GCP project ID. That is the **only file
+you need to edit**: the Makefile reads `project_id` from there via
+`awk` and derives the Artifact Registry image URL and all Terraform
+`-var` flags automatically. No other configuration file is touched.
+
 #### Prerequisites
 
 | Requirement | How to verify |
 |---|---|
-| GCP project `randy-gupta-poc` with billing enabled | `gcloud projects describe randy-gupta-poc` |
+| GCP project with billing enabled | `gcloud projects describe <project_id>` |
 | Application Default Credentials | `gcloud auth application-default login` |
 | Terraform ≥ 1.7 | `terraform version` |
 | Docker authenticated for Artifact Registry | `make auth-registry` |
-| MI3 image built locally | `docker images equiguard/geofence-processor:test` |
 
 #### Required GCP APIs
 

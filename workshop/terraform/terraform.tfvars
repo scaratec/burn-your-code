@@ -1,12 +1,9 @@
 # Static defaults shared across all workshop deployments.
 #
 # project_id and processor_image are intentionally absent — both are
-# project-specific and are always supplied by the Makefile via -var flags:
-#
-#   make tf-apply   PROJECT=<your-gcp-project-id>
-#   make test-mi4   PROJECT=<your-gcp-project-id>
-#
-# This prevents accidental provisioning into the wrong GCP project.
+# derived automatically by the Makefile from the project_id row in
+# bdd/mi4_cloud_run.feature (the single source of truth) and passed
+# to Terraform via -var flags. No manual edit of this file is needed.
 
 region              = "europe-west3"
 service_name        = "geofence-processor"

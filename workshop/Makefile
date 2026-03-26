@@ -26,7 +26,7 @@ EMULATOR_PUBSUB_IMAGE   := gcr.io/google.com/cloudsdktool/cloud-sdk:latest
 EMULATOR_FIRESTORE_DIR  := /tmp/equiguard-emulators
 EMULATOR_FIRESTORE_PID  := $(EMULATOR_FIRESTORE_DIR)/firestore.pid
 
-.PHONY: help setup build build-image \
+.PHONY: help setup setup-python build build-image \
         start-emulators stop-emulators \
         test-mi1 test-mi2 test-mi3 test-mi4 test-all \
         auth-registry push-image \
@@ -41,7 +41,8 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Local targets:"
-	@echo "  setup            Install Python deps, resolve Go modules"
+	@echo "  setup            Install Python deps + resolve Go modules"
+	@echo "  setup-python     Install Python deps only (used by test-mi4)"
 	@echo "  build            Compile Go binaries into bin/"
 	@echo "  build-image      Build the geofence-processor Docker image"
 	@echo "  start-emulators  Start Firestore (npx) + Pub/Sub (Docker) emulators"
@@ -68,13 +69,15 @@ help:
 # Local setup
 # ---------------------------------------------------------------------------
 
-setup:
-	@echo "Go binary: $(GO)"
-	@$(GO) version
+setup-python:
 	@echo "Setting up Python virtual environment..."
 	python3 -m venv .venv
 	@bash -c "source .venv/bin/activate && \
 		pip install -q -r requirements.txt"
+
+setup: setup-python
+	@echo "Go binary: $(GO)"
+	@$(GO) version
 	@echo "Resolving Go module dependencies..."
 	$(GO) mod tidy
 	@mkdir -p bin
@@ -189,7 +192,7 @@ tf-apply: tf-init
 # Cloud — MI4 BDD tests
 # ---------------------------------------------------------------------------
 
-test-mi4: setup
+test-mi4: setup-python
 	@echo "=== Milestone 4: Cloud Run (LIVE GCP — project: $(PROJECT)) ==="
 	@echo "Checking prerequisites..."
 	@terraform -chdir=terraform output cloud_run_url >/dev/null 2>&1 || { \
