@@ -9,9 +9,31 @@ In modern software engineering, the implementation (code) is becoming a commodit
 This talk explores a workflow where human-written **Gherkin Feature Files** serve as the primary "Single Source of Truth" for business behavior and as a highly reliable prompt for AI agents. We address the **"Speed Paradox"**: showing how the strict structure of BDD, which once slowed humans down, now acts as a practical guardrail, enabling AI to deliver higher-quality code with better reproducibility.
 It also emphasizes a non-delegable human responsibility: reviewing step implementations for test honesty, because a green suite is meaningless if the glue code smuggles business logic into the test.
 
+## Hands-On Workshop
+
+The [`/workshop`](./workshop/) directory contains a fully working BDD workshop that attendees can run themselves:
+
+**EquiGuard — AI-Driven Geofencing & Event-Driven Architecture on Google Cloud**
+
+A GPS-based horse pasture monitoring system built exclusively from Gherkin feature files — no separate config, no magic values. The workshop has four milestones of increasing complexity:
+
+| Milestone | What it tests | Infrastructure |
+|---|---|---|
+| MI1 | Core point-in-polygon algorithm | Go CLI, no network |
+| MI2 | Full HTTP geofence processor | Firestore + Pub/Sub emulators |
+| MI3 | Containerised service | Docker + emulators |
+| MI4 | Live Cloud Run deployment | Real GCP (costs apply) |
+
+The same Gherkin scenarios pass in all four milestones — only the execution environment changes. See [`/workshop/README.md`](./workshop/README.md) for setup instructions.
+
+**BDD Guidelines** are available in [`BDD_GUIDELINES_v1.6.0_DE.md`](./BDD_GUIDELINES_v1.6.0_DE.md) (German) and [`BDD_GUIDELINES_v1.6.0_EN.md`](./BDD_GUIDELINES_v1.6.0_EN.md) (English).
+
+---
+
 ## Repository Structure
 
 - **/slides**: Contains 19 Markdown files, each representing a slide. They are numbered to maintain the logical flow of the presentation.
+- **/workshop**: Hands-on BDD workshop with 4 milestones (see above).
 - **submission_data.md**: Contains the final title and abstracts (full and concise versions) for conference submissions.
 
 ## Presentation Flow
