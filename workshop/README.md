@@ -36,6 +36,38 @@ Cloud Run: geofence-processor
 
 ---
 
+## The Real Exercise: Burn the Code
+
+The feature files and step code are the specification. The Go implementation
+is just one possible answer.
+
+**The actual workshop exercise is this:**
+
+1. Delete the implementation — everything that is *not* a feature file or
+   step file:
+   ```bash
+   rm -rf cmd/ internal/ go.mod go.sum Dockerfile
+   ```
+2. Open your AI agent of choice (Claude Code, Copilot, Cursor, …).
+3. Point it at the `bdd/` directory and say:
+   > "Implement a service that makes these BDD scenarios pass.
+   > Use \<your language of choice\>."
+4. Run the milestones and iterate until they are green.
+
+The point of the exercise: **the feature files fully define the system**.
+The language, the framework, and the runtime are details the agent decides.
+If the tests pass, the system is correct — regardless of what the
+implementation looks like.
+
+**Challenge:** The step code and Makefile are written with Go in mind —
+MI1 calls a compiled binary via subprocess with specific CLI flags, and
+`make build` runs `go build`. This is part of the exercise: the agent
+must read the step files as an additional specification layer and adapt
+the build tooling accordingly. Claude Code, Gemini CLI, and Codex handle
+this well. Give it a try.
+
+---
+
 ## Setup
 
 ```bash
