@@ -1,7 +1,9 @@
 variable "project_id" {
-  description = "GCP project ID"
+  description = "GCP project ID — always supplied via 'make PROJECT=<id>'"
   type        = string
-  default     = "randy-gupta-poc"
+  # No default: must be passed explicitly so no one accidentally provisions
+  # into the wrong project. Supply via: terraform apply -var "project_id=..."
+  # or through the Makefile targets (make tf-apply PROJECT=<id>).
 }
 
 variable "region" {

@@ -6,6 +6,27 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  # ---------------------------------------------------------------------------
+  # Remote backend (recommended for teams)
+  #
+  # By default Terraform stores state locally in terraform.tfstate, which is
+  # excluded from version control via .gitignore. This is fine when a single
+  # person runs 'make tf-apply', but breaks in team settings because two
+  # people would maintain separate, diverging state files.
+  #
+  # To use a shared GCS backend:
+  #   1. Create a GCS bucket:
+  #        gsutil mb -l europe-west3 gs://<your-project-id>-tf-state
+  #        gsutil versioning set on gs://<your-project-id>-tf-state
+  #   2. Uncomment and fill in the block below.
+  #   3. Run 'terraform init -migrate-state' to upload the existing state.
+  #
+  # backend "gcs" {
+  #   bucket = "<your-project-id>-tf-state"
+  #   prefix = "equiguard"
+  # }
+  # ---------------------------------------------------------------------------
 }
 
 provider "google" {

@@ -41,7 +41,7 @@ Feature: Geofence Processor Service (Service B)
       """
     
     # Resilient testing with polling/timeout (Guideline 6.4)
-    Then the Firestore collection "alerts" should eventually contain a record for "Lilly":
+    Then the Firestore collection "alerts" should eventually contain a record for "Lilly" within 10 seconds:
       | field | value              |
       | type  | GEOFENCE_VIOLATION |
       | zone  | HomePasture        |

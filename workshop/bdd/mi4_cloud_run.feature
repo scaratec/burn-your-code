@@ -8,32 +8,37 @@ Feature: Geofence Processor on Cloud Run (Live GCP)
   # ============================================================
   # WARNING: THIS MILESTONE USES REAL GCP RESOURCES.
   #
+  # PARTICIPANT SETUP — one edit required:
+  #   Change project_id in the Background table below to your
+  #   GCP project ID. That value is the single source of truth:
+  #   the Makefile reads it from here and passes it to Terraform
+  #   and Docker automatically. No other file needs to be changed.
+  #
   # Prerequisites:
-  #   - GCP project: randy-gupta-poc (billing enabled)
+  #   - GCP project with billing enabled
   #   - gcloud CLI authenticated: gcloud auth application-default login
-  #   - Docker authenticated: make auth-registry
+  #   - Docker authenticated: make auth-registry PROJECT=<project_id>
   #   - Terraform installed: >= 1.7
   #
   # Before running:
-  #   make push-image     # tag and push the container image
-  #   make tf-apply       # provision all GCP resources via Terraform
+  #   make tf-apply   # provision all GCP resources via Terraform
   #
   # After the workshop:
   #   make teardown-mi4   # destroy all GCP resources (stops billing)
   # ============================================================
 
   Background:
-    # All values explicit — no magic defaults (Guideline 2.1).
-    # These must match terraform/terraform.tfvars.
+    # project_id is the single source of truth for the GCP project.
+    # The Makefile reads this value via awk and derives the Artifact
+    # Registry image URL and all Terraform -var flags from it — no
+    # other file needs to be edited. All values explicit (Guideline 2.1).
     Given the Cloud Run deployment is configured with:
-      | key                 | value                                                                        |
-      | project_id          | randy-gupta-poc                                                              |
-      | region              | europe-west3                                                                 |
-      | service_name        | geofence-processor                                                           |
-      | registry_image      | europe-west3-docker.pkg.dev/randy-gupta-poc/equiguard/geofence-processor:v1 |
-      | local_image         | equiguard/geofence-processor:test                                            |
-      | pubsub_topic        | equiguard-telemetry                                                          |
-      | pubsub_subscription | equiguard-telemetry-push-sub                                                 |
+      | key                 | value                        |
+      | project_id          | randy-gupta-poc              |
+      | region              | europe-west3                 |
+      | service_name        | geofence-processor           |
+      | pubsub_topic        | equiguard-telemetry          |
+      | pubsub_subscription | equiguard-telemetry-push-sub |
 
     # Terraform provisions Artifact Registry, Cloud Run, Pub/Sub topic
     # and push subscription in one idempotent apply
@@ -71,8 +76,7 @@ Feature: Geofence Processor on Cloud Run (Live GCP)
         "zone": "HomePasture"
       }
       """
-    # Pub/Sub → Cloud Run → Firestore is fully async — allow 30 seconds
-    Then the Firestore collection "alerts" should eventually contain a record for "Lilly":
+    Then the Firestore collection "alerts" should eventually contain a record for "Lilly" within 30 seconds:
       | field | value              |
       | type  | GEOFENCE_VIOLATION |
       | zone  | HomePasture        |
