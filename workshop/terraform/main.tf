@@ -29,6 +29,17 @@ resource "google_project_service" "apis" {
 }
 
 # ---------------------------------------------------------------------------
+# Firestore database
+# ---------------------------------------------------------------------------
+
+resource "google_firestore_database" "default" {
+  name        = "(default)"
+  location_id = var.region
+  type        = "FIRESTORE_NATIVE"
+  depends_on  = [google_project_service.apis]
+}
+
+# ---------------------------------------------------------------------------
 # Artifact Registry
 # ---------------------------------------------------------------------------
 
@@ -50,6 +61,11 @@ resource "google_cloud_run_v2_service" "processor" {
   location = var.region
 
   template {
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 3
+    }
+
     containers {
       image = var.processor_image
 
@@ -63,6 +79,10 @@ resource "google_cloud_run_v2_service" "processor" {
       }
 
       resources {
+        # cpu_idle = true: CPU is throttled between requests (not always
+        # allocated). Combined with Go's fast startup and small binary,
+        # this is the cheapest viable Cloud Run configuration.
+        cpu_idle = true
         limits = {
           cpu    = "1"
           memory = "256Mi"
@@ -74,9 +94,14 @@ resource "google_cloud_run_v2_service" "processor" {
   depends_on = [google_project_service.apis]
 }
 
-# Allow the Pub/Sub service account to invoke the Cloud Run service
-data "google_project" "project" {
-  project_id = var.project_id
+# Dedicated service account for Pub/Sub → Cloud Run push authentication.
+# Using a dedicated SA (not the built-in gcp-sa-pubsub SA) avoids the
+# iam.serviceAccounts.actAs permission requirement on the built-in SA,
+# since the Terraform caller owns any SA it creates.
+resource "google_service_account" "pusher" {
+  account_id   = "equiguard-pusher"
+  display_name = "EquiGuard Pub/Sub → Cloud Run Pusher"
+  project      = var.project_id
 }
 
 resource "google_cloud_run_v2_service_iam_member" "pubsub_invoker" {
@@ -84,7 +109,7 @@ resource "google_cloud_run_v2_service_iam_member" "pubsub_invoker" {
   location = var.region
   name     = google_cloud_run_v2_service.processor.name
   role     = "roles/run.invoker"
-  member   = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+  member   = "serviceAccount:${google_service_account.pusher.email}"
 }
 
 # ---------------------------------------------------------------------------
@@ -103,6 +128,10 @@ resource "google_pubsub_subscription" "telemetry_push" {
 
   push_config {
     push_endpoint = "${google_cloud_run_v2_service.processor.uri}/telemetry-push"
+    oidc_token {
+      service_account_email = google_service_account.pusher.email
+      audience              = google_cloud_run_v2_service.processor.uri
+    }
   }
 
   ack_deadline_seconds = 60
