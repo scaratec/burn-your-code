@@ -7,6 +7,22 @@ import requests
 from behave import given, then, when
 from google.cloud import firestore, pubsub_v1
 
+
+def _id_token() -> str:
+    """Fetch a Google OIDC identity token for the authenticated gcloud user.
+
+    Uses 'gcloud auth print-identity-token' which works with all gcloud
+    credential types including application-default user credentials.
+    Cloud Run accepts tokens issued by accounts with roles/run.invoker.
+    """
+    result = subprocess.run(
+        ["gcloud", "auth", "print-identity-token"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
 # Absolute path to the Terraform directory relative to this file
 _TERRAFORM_DIR = os.path.join(
     os.path.dirname(__file__), "..", "..", "terraform"
@@ -107,7 +123,12 @@ def step_cloud_health_check(context, method_path, expected_status, timeout):
 
     while time.time() < deadline:
         try:
-            resp = requests.get(url, timeout=5)
+            token = _id_token()
+            resp = requests.get(
+                url,
+                timeout=5,
+                headers={"Authorization": f"Bearer {token}"},
+            )
             if resp.status_code == expected_status:
                 return
         except requests.exceptions.RequestException:
