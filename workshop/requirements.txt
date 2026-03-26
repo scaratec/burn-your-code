@@ -1,0 +1,18 @@
+# Direct runtime dependencies for the EquiGuard BDD test suite.
+#
+# Versions are pinned to the patch level so that workshop participants
+# get a reproducible environment regardless of when they run 'make setup'.
+#
+# To upgrade: adjust the version pins, re-run 'make setup', verify all
+# milestones pass, then commit the updated file.
+#
+# Transitive dependencies are resolved by pip at install time. If you need
+# a fully locked environment (all transitive deps pinned), run:
+#   pip install pip-tools
+#   pip-compile requirements.txt -o requirements.lock.txt
+
+behave==1.3.3
+google-auth==2.49.1
+google-cloud-firestore==2.26.0
+google-cloud-pubsub==2.36.0
+requests==2.33.0

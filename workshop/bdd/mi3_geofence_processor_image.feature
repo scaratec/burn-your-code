@@ -54,7 +54,7 @@ Feature: Geofence Processor OCI Image
         "zone": "HomePasture"
       }
       """
-    Then the Firestore collection "alerts" should eventually contain a record for "Lilly":
+    Then the Firestore collection "alerts" should eventually contain a record for "Lilly" within 10 seconds:
       | field | value              |
       | type  | GEOFENCE_VIOLATION |
       | zone  | HomePasture        |

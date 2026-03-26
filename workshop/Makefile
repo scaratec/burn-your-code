@@ -1,10 +1,19 @@
+# GCP project ID — single source of truth is the project_id row in
+# bdd/mi4_cloud_run.feature. Change it there; the Makefile reads it
+# automatically. Local targets (test-mi1, test-mi2, test-mi3) never
+# evaluate PROJECT and are not affected.
+PROJECT    := $(shell awk -F'|' '/\| *project_id *\|/{gsub(/ /,"",$$3); print $$3; exit}' \
+                bdd/mi4_cloud_run.feature)
+
 REGISTRY   := europe-west3-docker.pkg.dev
-PROJECT    := randy-gupta-poc
 REPO       := equiguard
 IMAGE_NAME := geofence-processor
 IMAGE_TAG  := v1
 LOCAL_TAG  := equiguard/geofence-processor:test
 REMOTE_TAG := $(REGISTRY)/$(PROJECT)/$(REPO)/$(IMAGE_NAME):$(IMAGE_TAG)
+
+# Convenience variable for the -var flags passed to every terraform call.
+TF_VARS    := -var "project_id=$(PROJECT)" -var "processor_image=$(REMOTE_TAG)"
 
 # Auto-detect Go binary — works regardless of installation path
 GO := $(shell which go 2>/dev/null \
@@ -43,6 +52,9 @@ help:
 	@echo "  test-all         Run MI1 + MI2 + MI3"
 	@echo ""
 	@echo "Cloud targets (MI4 — real GCP, incurs costs):"
+	@echo "  Project ID is read from bdd/mi4_cloud_run.feature (project_id row)."
+	@echo "  Change it there once — Makefile, Terraform, and Docker follow."
+	@echo ""
 	@echo "  auth-registry    Configure Docker for Artifact Registry"
 	@echo "  push-image       Tag and push image to Artifact Registry"
 	@echo "  tf-init          Initialize Terraform"
@@ -62,8 +74,7 @@ setup:
 	@echo "Setting up Python virtual environment..."
 	python3 -m venv .venv
 	@bash -c "source .venv/bin/activate && \
-		pip install -q behave requests \
-		google-cloud-firestore google-cloud-pubsub"
+		pip install -q -r requirements.txt"
 	@echo "Resolving Go module dependencies..."
 	$(GO) mod tidy
 	@mkdir -p bin
@@ -91,7 +102,7 @@ start-emulators:
 	@printf '{"emulators":{"firestore":{"port":8082,"host":"localhost"},"ui":{"enabled":false}}}' \
 		> $(EMULATOR_FIRESTORE_DIR)/firebase.json
 	@cd $(EMULATOR_FIRESTORE_DIR) && \
-		nohup npx -y firebase-tools emulators:start \
+		nohup npx --yes firebase-tools@15.11.0 emulators:start \
 			--only firestore --project equiguard-test \
 			> $(EMULATOR_FIRESTORE_DIR)/firestore.log 2>&1 & \
 		echo $$! > $(EMULATOR_FIRESTORE_PID)
@@ -166,11 +177,13 @@ tf-init:
 tf-apply: tf-init
 	@echo "Phase 1: provisioning Artifact Registry..."
 	terraform -chdir=terraform apply -auto-approve -input=false \
-		-target=google_artifact_registry_repository.equiguard
+		-target=google_artifact_registry_repository.equiguard \
+		$(TF_VARS)
 	@echo "Pushing image to registry..."
 	$(MAKE) --no-print-directory push-image
 	@echo "Phase 2: provisioning Cloud Run, Pub/Sub, and subscription..."
-	terraform -chdir=terraform apply -auto-approve -input=false
+	terraform -chdir=terraform apply -auto-approve -input=false \
+		$(TF_VARS)
 
 # ---------------------------------------------------------------------------
 # Cloud — MI4 BDD tests
@@ -178,8 +191,24 @@ tf-apply: tf-init
 
 test-mi4: setup
 	@echo "=== Milestone 4: Cloud Run (LIVE GCP — project: $(PROJECT)) ==="
+	@echo "Checking prerequisites..."
+	@terraform -chdir=terraform output cloud_run_url >/dev/null 2>&1 || { \
+		echo ""; \
+		echo "ERROR: Terraform outputs not found."; \
+		echo "       Run 'make tf-apply' before 'make test-mi4'."; \
+		echo ""; \
+		exit 1; \
+	}
+	@gcloud auth print-identity-token >/dev/null 2>&1 || { \
+		echo ""; \
+		echo "ERROR: No active gcloud credentials."; \
+		echo "       Run: gcloud auth application-default login"; \
+		echo ""; \
+		exit 1; \
+	}
+	@echo "Prerequisites OK."
 	@echo "WARNING: This test uses real GCP resources and incurs costs."
-	@bash -c "source .venv/bin/activate && behave bdd/ --tags=@mi4"
+	@bash -c "source .venv/bin/activate && behave bdd/ --tags=@mi4 -D project_id=$(PROJECT)"
 
 # ---------------------------------------------------------------------------
 # Teardown
@@ -189,7 +218,8 @@ teardown-mi4:
 	@echo "Destroying all GCP resources for project $(PROJECT)..."
 	@echo "This will delete: Cloud Run, Pub/Sub, Artifact Registry repository."
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ]
-	terraform -chdir=terraform destroy -auto-approve -input=false
+	terraform -chdir=terraform destroy -auto-approve -input=false \
+		$(TF_VARS)
 	@echo "Teardown complete."
 
 # ---------------------------------------------------------------------------

@@ -36,6 +36,39 @@ Cloud Run: geofence-processor
 
 ---
 
+## Setup
+
+```bash
+make setup
+```
+
+This single command:
+1. Creates a Python virtual environment (`.venv/`)
+2. Installs all Python dependencies from `requirements.txt` with **pinned
+   versions** — every participant gets the exact same library stack
+3. Resolves Go module dependencies (`go mod tidy`)
+4. Creates the `bin/` directory for compiled binaries
+
+### Upgrading Python dependencies
+
+Dependencies are pinned in `requirements.txt` at the patch level. To upgrade:
+
+```bash
+# Edit requirements.txt with new version pins, then:
+make setup
+make test-all   # verify all local milestones still pass
+# commit requirements.txt
+```
+
+For a fully locked environment including all transitive dependencies:
+
+```bash
+pip install pip-tools
+pip-compile requirements.txt -o requirements.lock.txt
+```
+
+---
+
 ## Milestones
 
 The workshop is structured in four milestones of increasing complexity.
@@ -75,7 +108,10 @@ make stop-emulators    # stop and remove all emulators
 ```
 
 **Emulator requirements:**
-- Firestore: Node.js 18+ with `npx` (firebase-tools downloads the JAR on first run)
+- Firestore: Node.js 18+ with `npx`. The Makefile pins
+  `firebase-tools@15.11.0` — the JAR is downloaded on first run and
+  cached by npx. Pinning the version guarantees the same emulator
+  behaviour across all workshop runs.
 - Pub/Sub: Docker + `gcr.io/google.com/cloudsdktool/cloud-sdk:latest`
 
 Requirements: MI1 + Node.js 18+ + Docker
@@ -138,6 +174,20 @@ make tf-apply
 make test-mi4
 ```
 
+`make test-mi4` performs two preflight checks before launching Behave:
+
+1. **Terraform outputs** — verifies that `terraform output cloud_run_url`
+   succeeds. If not, the run is aborted with the message
+   `Run 'make tf-apply' before 'make test-mi4'`.
+2. **gcloud credentials** — verifies that `gcloud auth print-identity-token`
+   succeeds. If not, the run is aborted with the instruction
+   `Run: gcloud auth application-default login`.
+
+> **Design note:** The Gherkin step `And the infrastructure is provisioned
+> with Terraform` reads Terraform outputs only — it does **not** run
+> `terraform apply`. Provisioning is a deployment concern handled by
+> `make tf-apply`; a Given step describes world state, it does not change it.
+
 #### What Terraform provisions
 
 | Resource | Name | Description |
@@ -149,6 +199,20 @@ make test-mi4
 
 All values are defined in `terraform/terraform.tfvars` and mirrored in the
 Gherkin Background table — no magic values anywhere.
+
+#### Terraform state
+
+By default Terraform stores state locally in `terraform/terraform.tfstate`
+(excluded from version control). This works fine for a single operator.
+
+For **team use**, configure a shared GCS backend so all members operate on
+the same state file. Instructions are in the commented `backend "gcs"` block
+at the top of `terraform/main.tf`.
+
+The provider lock file `terraform/.terraform.lock.hcl` **is** tracked in
+version control. It pins the exact `hashicorp/google` provider version
+(currently `5.45.2`) so participants do not depend on the Terraform registry
+being available or returning a different version during the workshop.
 
 #### Teardown
 
@@ -170,8 +234,11 @@ This runs `terraform destroy` and requires manual confirmation.
   of fixed sleeps (BDD Guideline 6.4).
 - **Behavioural Equivalence:** MI4 uses the identical payloads as MI2/MI3.
   If MI4 fails where MI2 passes, the problem is infrastructure — not logic.
-- **Test Isolation:** Firestore data is cleared after each scenario in all
-  milestones (emulator bulk-delete for MI1–MI3, document-level delete for MI4).
+- **Test Isolation:** Firestore data is cleared after each scenario in
+  `bdd/environment.py`. MI2/MI3 use a single HTTP DELETE against the
+  emulator API (atomic, fast). MI4 streams and deletes documents
+  individually from real Firestore, touching only the `alerts` and
+  `geofences` collections.
 
 ---
 

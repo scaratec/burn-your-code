@@ -36,6 +36,11 @@ _TERRAFORM_DIR = os.path.join(
 @given("the Cloud Run deployment is configured with:")
 def step_cloud_config(context):
     context.cloud_config = {row["key"]: row["value"] for row in context.table}
+
+    # project_id is the single source of truth — read directly from the
+    # Gherkin Background table. The Makefile extracts the same value via
+    # awk so that Terraform and Docker always use an identical project ID
+    # without any additional configuration files or CLI flags.
     context.project_id = context.cloud_config["project_id"]
 
     # Ensure real Firestore is used — not the local emulator
@@ -44,51 +49,55 @@ def step_cloud_config(context):
 
 
 @given("the infrastructure is provisioned with Terraform")
-def step_terraform_apply(context):
-    # Run terraform only once per feature run, not before every scenario.
-    # Subsequent scenarios reuse the outputs stored on context.feature.
-    if getattr(context.feature, "_tf_applied", False):
+def step_terraform_read_outputs(context):
+    """Assert that Terraform-managed infrastructure is deployed and read its
+    outputs into the test context.
+
+    This step deliberately does NOT run 'terraform apply'. Provisioning is a
+    deployment concern, not a test concern. The step fails with a clear message
+    when the infrastructure has not been provisioned yet, guiding the user to
+    run 'make tf-apply' first.
+
+    Outputs are cached on context.feature so that only the first scenario in
+    the feature run pays the cost of a 'terraform output' call. All subsequent
+    scenarios reuse the cached values.
+    """
+    # Cache outputs across scenarios within the same feature run.
+    if getattr(context.feature, "_tf_outputs_loaded", False):
         context.cloud_run_url = context.feature._tf_cloud_run_url
         context.topic_path    = context.feature._tf_topic_path
         context.publisher     = context.feature._tf_publisher
         return
 
-    # terraform init — safe to run repeatedly
-    subprocess.run(
-        ["terraform", "init", "-input=false"],
-        cwd=_TERRAFORM_DIR,
-        check=True,
-    )
-
-    # terraform apply — idempotent, only provisions drift
     result = subprocess.run(
-        ["terraform", "apply", "-auto-approve", "-input=false"],
+        ["terraform", "output", "-json"],
         cwd=_TERRAFORM_DIR,
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"terraform apply failed:\n{result.stderr}")
+        raise RuntimeError(
+            "Could not read Terraform outputs — has the infrastructure been "
+            "provisioned?\n\nRun 'make tf-apply' and try again.\n\n"
+            f"terraform output stderr:\n{result.stderr}"
+        )
 
-    # Read outputs so subsequent steps can use them
-    output_result = subprocess.run(
-        ["terraform", "output", "-json"],
-        cwd=_TERRAFORM_DIR,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    outputs = json.loads(output_result.stdout)
+    outputs = json.loads(result.stdout)
+    if not outputs:
+        raise RuntimeError(
+            "Terraform outputs are empty — the infrastructure may not have "
+            "been provisioned yet.\n\nRun 'make tf-apply' and try again."
+        )
 
     context.cloud_run_url = outputs["cloud_run_url"]["value"]
     context.topic_path    = outputs["topic_path"]["value"]
     context.publisher     = pubsub_v1.PublisherClient()
 
-    # Cache on feature so the next scenario skips the apply
-    context.feature._tf_applied      = True
-    context.feature._tf_cloud_run_url = context.cloud_run_url
-    context.feature._tf_topic_path    = context.topic_path
-    context.feature._tf_publisher     = context.publisher
+    # Cache on feature so subsequent scenarios skip the subprocess call.
+    context.feature._tf_outputs_loaded  = True
+    context.feature._tf_cloud_run_url   = context.cloud_run_url
+    context.feature._tf_topic_path      = context.topic_path
+    context.feature._tf_publisher       = context.publisher
 
 
 # ---------------------------------------------------------------------------

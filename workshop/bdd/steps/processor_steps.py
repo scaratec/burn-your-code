@@ -73,13 +73,14 @@ def step_when_pubsub_push(context, endpoint, device_id):
     resp.raise_for_status()
 
 
-@then('the Firestore collection "{collection}" should eventually contain a record for "{device_id}":')
-def step_then_eventually_contains(context, collection, device_id):
+@then('the Firestore collection "{collection}" should eventually contain'
+      ' a record for "{device_id}" within {timeout:d} seconds:')
+def step_then_eventually_contains(context, collection, device_id, timeout):
     expected_data = {}
     for row in context.table:
         expected_data[row["field"]] = row["value"]
-        
-    deadline = time.time() + 10.0
+
+    deadline = time.time() + timeout
     while time.time() < deadline:
         try:
             docs = context.db.collection(collection).where("device", "==", device_id).stream()

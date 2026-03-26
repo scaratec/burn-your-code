@@ -16,9 +16,9 @@ junit_reports/
 # Go binaries
 bin/
 
-# Terraform state and local cache
+# Terraform — local state and provider cache
+# .terraform.lock.hcl is intentionally tracked (it pins provider versions).
 terraform/.terraform/
-terraform/.terraform.lock.hcl
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 
