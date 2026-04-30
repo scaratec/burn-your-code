@@ -26,7 +26,7 @@ A GPS-based horse pasture monitoring system built exclusively from Gherkin featu
 
 The same Gherkin scenarios pass in all four milestones — only the execution environment changes. See [`/workshop/README.md`](./workshop/README.md) for setup instructions.
 
-**BDD Guidelines** are available in [`BDD_GUIDELINES_v1.6.0_DE.md`](./BDD_GUIDELINES_v1.6.0_DE.md) (German) and [`BDD_GUIDELINES_v1.6.0_EN.md`](./BDD_GUIDELINES_v1.6.0_EN.md) (English).
+**BDD Guidelines** are available in [`BDD_GUIDELINES_v1.8.0_DE.md`](./BDD_GUIDELINES_v1.8.0_DE.md) (German) and [`BDD_GUIDELINES_v1.8.0_EN.md`](./BDD_GUIDELINES_v1.8.0_EN.md) (English).
 
 ---
 
