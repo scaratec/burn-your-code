@@ -4,7 +4,7 @@
 github.com/scaratec/burn-your-code
 
 **BDD Guidelines**
-BDD_GUIDELINES_v1.6.0_EN.md / _DE.md
+BDD_GUIDELINES_v1.8.0_EN.md / _DE.md
 
 **Tools used in the workshop**
 - Behave (Python BDD runner)

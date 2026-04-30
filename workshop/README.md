@@ -10,9 +10,12 @@ exclusively by **Gherkin Feature Files**.
 
 ### The Case: "EquiGuard"
 
-We monitor the pasture areas in Lower Saxony. Using GPS telemetry,
+We monitor a fictional pasture somewhere in Lower Saxony. Using GPS telemetry,
 the system determines in real-time whether horses (e.g., Lilly or Honey) have
-left the predefined geofence.
+left the predefined geofence. The polygon coordinates, horse names, and
+project IDs in this workshop are intentional decoy data — picked at random
+from Google Maps so the workshop ships with realistic-looking values without
+exposing real-world locations.
 
 ---
 

@@ -58,8 +58,7 @@ User added: *"schmutzig, düster, rauchig — es entsteht aber etwas Brilliantes
 ### Q7 — Engraved content of the mold
 
 The user first asked whether `mcp-experiment` had complex scenarios — it does
-not (design phase, ADRs only). They then redirected to the SCARATEC
-monorepo, which contains a five-digit number of feature files. Three candidates were
+not (design phase, ADRs only). They then redirected to an internal codebase, which contains a five-digit number of feature files. Three candidates were
 presented:
 
 - (b) Temporal VAT / Accounting (German, narrative) — German Corona VAT switch.
