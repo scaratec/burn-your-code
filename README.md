@@ -28,12 +28,22 @@ The same Gherkin scenarios pass in all four milestones — only the execution en
 
 **BDD Guidelines** are available in [`BDD_GUIDELINES_v1.8.0_DE.md`](./BDD_GUIDELINES_v1.8.0_DE.md) (German) and [`BDD_GUIDELINES_v1.8.0_EN.md`](./BDD_GUIDELINES_v1.8.0_EN.md) (English).
 
+## Companion Governance: ADR + LIM
+
+The [`/governance`](./governance/) directory documents the **decision-and-debt governance** that complements the BDD Guidelines. Two small registers sit next to your `.feature` files:
+
+- **ADRs** (Architecture Decision Records) — one record per architectural decision, in the Nygard tradition with mandatory Security Implications and Alternatives Considered sections.
+- **LIMs** (Limitation Records) — a high-friction register for accepted, bounded weaknesses. Four-state lifecycle (Proposed → Accepted → Resolved / Withdrawn / Superseded), no-self-approval governance, paydown-commit-SHA traceability.
+
+Together with the BDD Guidelines they form a triad: the `.feature` files say *what* the system does, ADRs say *why* it's built that way, LIMs say *where* the project knowingly falls short. In an AI-driven workflow, all three are context the agent reads — and the LIM register is what tells the agent which "bugs" are deliberate. See [`governance/README.md`](./governance/README.md) for the framework overview and worked examples in the EquiGuard workshop's domain.
+
 ---
 
 ## Repository Structure
 
 - **/slides**: Contains 19 Markdown files, each representing a slide. They are numbered to maintain the logical flow of the presentation.
 - **/workshop**: Hands-on BDD workshop with 4 milestones (see above).
+- **/governance**: ADR + LIM framework (companion to the BDD Guidelines).
 - **submission_data.md**: Contains the final title and abstracts (full and concise versions) for conference submissions.
 
 ## Presentation Flow
