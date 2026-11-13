@@ -6,7 +6,7 @@ Offline Reveal.js deck for the 90-minute workshop (25 slides, 1920 × 1080). It 
 |---|---|
 | Present | Open `index.html` in Chrome or Firefox. `F` full screen, `S` speaker view with notes, `Esc` overview. Slide 9: click the video or press `Enter` to play. |
 | Fallback | `deck.pdf` (one slide per page; the video slide shows the poster) |
-| Re-export the PDF | Open `index.html?print-pdf` in Chrome, print to PDF with margins *None* and *Background graphics* on |
+| Re-export the PDF | In this folder: `python3 -m http.server 8765`, then `node export-pdf.mjs http://127.0.0.1:8765/index.html deck.pdf` (Node 22+, Google Chrome). Manually: open `index.html?print-pdf` in Chrome, print with margins *None* and *Background graphics* on. |
 
 The repository stores the video, the PDF, the fonts and the images with **Git LFS**. Without it they are only small pointer files: install Git LFS and run `git lfs pull`.
 

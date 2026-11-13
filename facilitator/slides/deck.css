@@ -1060,8 +1060,57 @@ code {
 
 .polygon-svg {
   width: 772px;
-  height: 620px;
+  height: auto;
+  aspect-ratio: 600 / 265;
   display: block;
+}
+
+.polygon-legend {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 2px solid var(--linie);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.polygon-legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  font-size: 28px;
+  line-height: 1.3;
+}
+
+.legend-chip {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 28px;
+}
+
+.legend-chip--edge {
+  color: var(--akzent);
+}
+
+.legend-chip--vertex {
+  color: var(--halt);
+}
+
+.legend-coord {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 28px;
+  color: var(--tinte);
+  font-feature-settings: "zero" 1;
+}
+
+.polygon-legend-meta {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--leise);
+  margin-top: 4px;
 }
 
 /* Exercise Workbench (Slides 14, 16, 18, 20, 22) */
@@ -1263,6 +1312,25 @@ code {
   gap: 24px;
 }
 
+.debrief-stack--compact {
+  gap: 18px;
+}
+
+.debrief-stack--compact .debrief-card {
+  padding: 22px 32px;
+}
+
+.debrief-stack--compact .debrief-text {
+  font-size: 30px;
+  line-height: 1.32;
+}
+
+.callout-bar--compact {
+  margin-top: 0;
+  padding: 20px 32px;
+  font-size: 32px;
+}
+
 .debrief-card {
   background: var(--flaeche);
   border-left: 6px solid var(--akzent);
@@ -1300,11 +1368,31 @@ code {
   margin: 0;
 }
 
-/* Slide 17: 12 rows stats */
+/* Slide 17: 16 rows stats */
 .stat-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
+}
+
+.stat-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.stat-grid-4 .stat-card {
+  padding: 22px 24px;
+}
+
+.stat-grid-4 .stat-num {
+  font-size: 58px;
+  margin-bottom: 8px;
+}
+
+.stat-grid-4 .stat-desc {
+  font-size: 28px;
+  line-height: 1.3;
 }
 
 .stat-card {
