@@ -6,7 +6,7 @@ Defects in a specification are cheapest to fix before an agent turns them into c
 
 ## Start
 
-Everybody loads the same specification with the hidden defects (your own files are backed up to `.workshop-backup/`):
+From here on, everybody works on the same reference specification — the rule "on the fence counts as inside" — even if your team decided differently in exercise 1. `make ex3-start` loads it with the hidden defects; your own files are backed up to `.workshop-backup/` first.
 
 ```bash
 make ex3-start

@@ -9,6 +9,7 @@ Everything you need to run the workshop without its author. Participants work in
 | Slides (offline) and PDF fallback | [`slides/index.html`](slides/index.html), [`slides/deck.pdf`](slides/deck.pdf) |
 | Answer key (reference decisions, expected results, the five defects) | `python3 facilitator/solutions.py answers` |
 | Reference solutions used by the checkpoints | [`solutions.tar.gz`](solutions.tar.gz) (`solutions.py unpack` / `pack` for editing) |
+| Recorded agent output (offline fallback, see troubleshooting) | `python3 facilitator/solutions.py list`, then `solutions.py show recorded/<file>` |
 | Self-check of all checkpoints | `python3 facilitator/verify_checkpoints.py` |
 
 ## 1. Before the workshop
@@ -23,6 +24,7 @@ Everything you need to run the workshop without its author. Participants work in
 - [ ] Your own clone with **Git LFS** installed (`git lfs install` before cloning, or `git lfs pull` afterwards) — the video, the PDF and the images are LFS files.
 - [ ] `make check` is green and `agy` is signed in — you demo any exercise that a participant cannot run.
 - [ ] Power strips; the Wi-Fi password on a slide or flip chart.
+- [ ] A backup connection for your own laptop (phone hotspot): the agent needs the model service, the rest of the material works offline.
 - [ ] Optional: pair people up — one laptop with a working `agy` per pair is enough.
 
 ## 2. Run of show
@@ -55,31 +57,31 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 - **Start:** `agy --model gemini-3.8-flash-high --mode auto -i "$(cat exercises/ex1-fence-decision/PROMPT.md)"`. Participants who followed PREPARATION.md have already trusted the folder; anyone else gets "Do you trust the contents of this project?" — answer *Yes*, and if `agy` then asks before every file read, `/exit` and restart.
 - **What happens:** the agent reads AGENTS.md and ADR-0001, then asks three questions, one at a time, each with options, recommendation and consequences: inside or outside, numerical tolerance, GPS accuracy now or deferred. After the third answer it writes `governance/adr/0005-*.md`, usually `governance/limitations/0004-*.md`, and updates both indexes.
 - **Measured:** 6 minutes including the three answers (three runs: 5:38, 5:51, and 8:45 for a run that also went through the first-run questions and trusted the folder only in the session).
-- **Watch for:** participants who answer "outside" — perfectly fine, but their exercise 2 then expects `false` on the fence. Exercise 4 starts from the reference for everybody.
+- **Watch for:** participants who answer "outside" — perfectly fine. If they keep their own ADR in exercise 2, their scenarios expect `false` on the fence and the suite is RED on different rows. From exercise 3 on, `make ex3-start` puts **everybody** on the reference decision (*inside*); say so in debrief 2, so nobody thinks their decision was "wrong".
 - **Debrief:** both answers are legitimate if they are recorded. Reveal the reference decision (slide 15, answer key). Point out that the LIM tells the next agent what *not* to "fix".
 
 ### Exercise 2 — Make it red
 
 - **Start:** own ADR-0005, or `make ex2-start` for the reference.
-- **What happens:** new rows in Layer 1 of the error path enumeration, then one new scenario outline `@mi1 @boundary` with the vertices and edge midpoints of HomePasture plus negative controls just beyond and just inside the fence. The agent runs `make test-mi1` and explains the failures.
+- **What happens:** new rows in Layer 1 of the error path enumeration, then one new scenario outline `@mi1 @boundary` with the vertices and edge midpoints of HomePasture, points half and twice the tolerance beyond the fence, and negative controls 0.1 m beyond and inside it. The agent runs `make test-mi1` and explains the failures.
 - **Measured:** 2–7 minutes in clean runs (2:13, 4:01, 4:24, 6:43); one early run took 9:30. This is the exercise most likely to run long — see the run of show for how to shorten it.
-- **Expected result** with the reference decision: **24 passed, 4 failed** (which rows, and why: answer key). The old code is not wrong everywhere — it is *undecided*.
-- **Debrief:** error paths first; the negative controls are what stop an implementation from cheating with a huge tolerance.
+- **Expected result** with the reference decision: **26 passed, 6 failed** (which rows, and why: answer key). The old code is not wrong everywhere — it is *undecided*.
+- **Debrief:** error paths first; the tolerance rows pin the `1e-9` down (half of it must be inside, twice of it outside), the negative controls show the fence is still a fence. Then announce that from now on everybody works on the reference decision.
 
 ### Exercise 3 — Let the critic find the bugs
 
-- **Start:** everybody runs `make ex3-start` (own files are backed up), then a **new** agent session with the critic prompt.
+- **Start:** everybody runs `make ex3-start` (own files are backed up; everybody now has the reference decision *inside*), then a **new** agent session with the critic prompt.
 - **What happens:** the critic reads only Markdown and Gherkin and reports a findings table along the six edges of BDD Guidelines §14.3.
 - **Measured:** 3–4 minutes (3:18, 3:37, 3:53). In every dry run the critic found all five defects, usually plus a few medium or low findings.
-- **Answer key:** slide 19 and `python3 facilitator/solutions.py answers`. Ask for a show of hands: who found all five? Are other findings real contradictions or matters of taste?
+- **Answer key:** slide 19 and `python3 facilitator/solutions.py answers`, which also explains the extra findings that critics regularly report (for example the malformed-envelope rule that LIM-0003 leaves without a scenario). Ask for a show of hands: who found all five? Are other findings real contradictions or matters of taste?
 - **Afterwards:** `make ex3-solution` restores the defect-free specification.
 
 ### Exercise 4 — Burn your code
 
 - **Start:** everybody runs `make ex4-start` (deletes all application code, `make test-mi1` is RED), then the prompt with the chosen language: `sed 's/LANGUAGE/Go/g'` etc.
-- **What happens:** the agent writes the CLI and a `./build.sh`, runs `make test-mi1`, fixes and repeats until the suite is green twice in a row.
+- **What happens:** the agent writes the CLI under `app/` and a `./build.sh`, runs `make test-mi1`, fixes and repeats until the suite is green twice in a row. `make ex4-start` resets `workshop/` completely: anything not part of the workshop (old implementations, notes) is packed into the backup and removed, and the command lists what it removed.
 - **Measured:** 3–7 minutes in Python (2:38, 3:03, 3:25, 4:08; the slowest earlier run 6:27).
-- **Expected result:** **28 passed, 0 failed**; `git status` shows no change under `governance/` or `bdd/`.
+- **Expected result:** **32 passed, 0 failed**; `make spec-check` reports `governance/` and `bdd/` unchanged since `ex4-start`. (`git status` is no help here: the checkpoint itself adds the uncommitted ADR-0005 and the boundary scenarios.)
 - **Watch for:** compiled languages need their toolchain on the laptop; if a build fails because the compiler is missing, switch to Python. If someone's agent edited the feature file, that is the teaching moment of the day: the rule says read-only.
 - **Debrief:** show of hands per language. Same specification, different code, the fence rule holds everywhere.
 
@@ -99,14 +101,14 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 | Sign-in on a remote machine/WSL opens no browser | `agy` prints a URL; open it on the laptop and paste the code back. |
 | `make check` fails at "MI1 test suite green" | `make workshop-start`, then `make check` again. |
 | `make: command not found` on Windows | Use WSL2 (Ubuntu); the workshop does not run in plain PowerShell. |
-| Someone lost their own work | Every checkpoint copies the previous files to `workshop/.workshop-backup/<time>-<checkpoint>/`. |
-| The agent changed files under `governance/` or `bdd/` in exercise 4 | `git diff governance bdd` shows it; `make ex4-start` resets and the rule is a good discussion point. |
-| No Wi-Fi at all | Run the exercises on your laptop as a demo; participants follow with `make exN-solution` and `make test-mi1`, which work offline once `make setup` ran. |
+| Someone lost their own work | Every checkpoint first packs everything the participant wrote into `workshop/.workshop-backup/<time>-<checkpoint>.tar.gz`. `tar -tzf <archive>` lists it, `tar -xzf <archive> <path>` restores a file. The archives are compressed on purpose, so agents' searches do not read old solutions in them. |
+| The agent changed files under `governance/` or `bdd/` in exercise 4 | `make spec-check` lists the files; `make ex4-start` resets, and the rule is a good discussion point. |
+| No Wi-Fi at all | The agent needs the model service, so live exercises need at least your phone hotspot: run them on your laptop as a demo. Without any connection, switch to an offline walkthrough: participants load `make exN-solution` and run `make test-mi1` (works offline once `make setup` ran), and you show the recorded agent output of each exercise with `python3 facilitator/solutions.py show recorded/<file>`. The learning is reduced to reading, not doing — say so. |
 
 ## 5. Maintaining the material
 
-- The participant-facing specification is the committed state of `workshop/governance/` and `workshop/bdd/`. Checkpoints restore it with `git checkout HEAD`.
+- The participant-facing specification is the committed state of `workshop/governance/` and `workshop/bdd/`.
 - Edit the solutions with `python3 facilitator/solutions.py unpack`, change files in `facilitator/solutions-src/` (not committed), then `python3 facilitator/solutions.py pack` and commit `solutions.tar.gz`.
-- Reference solutions are overlays: `ex1/` and `ex2/` are copied on top of the committed specification; `ex4/` adds `build.sh` and `src/`. If you change the base specification, update the copies of the two README indexes in `ex1/` and the error path enumeration in `ex2/`.
+- Every checkpoint resets `workshop/` to git HEAD (tracked files restored, untracked files removed after the backup). Reference solutions are overlays on top: `ex1/` and `ex2/` change the specification; `ex4/` adds `build.sh` and `app/`. If you change the base specification, update the copies of the two README indexes in `ex1/` and the error path enumeration in `ex2/`.
 - The defects of exercise 3 are text replacements in `ex3-defects.json`; each `old` text must exist in the exercise 2 reference.
-- After any change: `make -C workshop setup && python3 facilitator/verify_checkpoints.py` must print nine `OK` lines.
+- After any change: `make -C workshop setup && python3 facilitator/verify_checkpoints.py` must print eleven `OK` lines.

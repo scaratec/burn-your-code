@@ -110,8 +110,15 @@ This repository is also used for a hands-on workshop. The reference solutions an
 - Never read, extract, import or execute anything under `../facilitator/` (including `solutions.tar.gz` and `solutions.py`) or `scripts/checkpoint.py`.
 - Never run the make targets `workshop-start`, `ex*-start`, `ex*-solution`, `bonus-start` or `bonus-solution` yourself.
 - Never use git history (`git show`, `git log -p`, `git diff` against other commits) to look for solutions.
+- Never read `.workshop-backup/` (participants' backups and earlier states) and exclude it, `../facilitator/` and `.venv/` from recursive searches (`grep -r`, `find`, `rg`).
 
 Produce your result from the specification and the task you were given. If you cannot, say so instead of looking for an answer key.
+
+**Scope and precedence during an exercise.** The prompt of the exercise defines the task and takes precedence over the general five-stage cycle in sections 1–3:
+
+- The existing ADRs, LIMs, feature files and step definitions are the given starting point; you do not have to recreate earlier stages.
+- Exercise 4 implements **milestone 1 only**: the CLI under `app/`, `./build.sh` and `make test-mi1`. The processor, the Dockerfile and `make test-all` (section 3.6) are out of scope.
+- If code fails an existing scenario, fix the code — that is not a specification gap. The feedback loop rule (specification first) applies to newly discovered gaps or contradictions in the specification: in a read-only exercise, report them instead of editing the specification.
 
 ---
 

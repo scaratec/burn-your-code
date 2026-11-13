@@ -6,6 +6,7 @@ repository would show up in those diffs, so the solutions live in
 facilitator/solutions.tar.gz, which git treats as binary.
 
   python3 facilitator/solutions.py answers   print the facilitator answer key
+  python3 facilitator/solutions.py show NAME  print one member, e.g. recorded/ex3-critic-report.txt
   python3 facilitator/solutions.py unpack    extract into facilitator/solutions-src/ for editing
   python3 facilitator/solutions.py pack      rebuild solutions.tar.gz from solutions-src/ (deterministic)
   python3 facilitator/solutions.py list      list the archive contents
@@ -69,6 +70,8 @@ def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "answers":
         sys.stdout.write(read("answers.md").decode())
+    elif cmd == "show" and len(sys.argv) > 2:
+        sys.stdout.write(read(sys.argv[2]).decode())
     elif cmd == "pack":
         pack()
     elif cmd == "unpack":
