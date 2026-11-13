@@ -1,0 +1,9 @@
+# Local AI agent settings & caches
+.claude/
+.opencode/
+__pycache__/
+
+# Internal / unredacted case studies (not for public GitHub mirror)
+case_study/
+case_study2/
+

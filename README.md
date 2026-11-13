@@ -1,70 +1,74 @@
-# Burn Your Code: Feature Files as the Ultimate AI Agent Prompt
+# Burn Your Code: Specification-First Engineering for Autonomous AI Agents
 
-This repository contains the structure and content for a presentation on the radical shift in software development: **AI-Driven Behavior-Driven Development (BDD)**.
+This repository contains the guidelines, governance framework, slide deck, video demo pipeline, and hands-on workshop for **AI-Native Specification-First Engineering** with **Antigravity CLI (`agy`)**, **Google Gemini**, and **Behavior-Driven Development (BDD)**.
 
-## The Core Concept
+---
 
-In modern software engineering, the implementation (code) is becoming a commodity. However, as **"Vibe Coding"** (ad-hoc coding via chat) gains popularity, we face a critical challenge: teams often prompt an agent with a rough goal, get back plausible code, but retain little control over why it works and what is protected against regression.
+## The Core Concept: From House of Cards to Foundation
 
-This talk explores a workflow where human-written **Gherkin Feature Files** serve as the primary "Single Source of Truth" for business behavior and as a highly reliable prompt for AI agents. We address the **"Speed Paradox"**: showing how the strict structure of BDD, which once slowed humans down, now acts as a practical guardrail, enabling AI to deliver higher-quality code with better reproducibility.
-It also emphasizes a non-delegable human responsibility: reviewing step implementations for test honesty, because a green suite is meaningless if the glue code smuggles business logic into the test.
+AI agents write code faster than humans make decisions. When teams rely on ad-hoc chat prompting (**"Vibe Coding"**), every generated file leans on unwritten assumptions. Because agents have no memory across sessions, anything not written down in the repository is re-negotiated or hallucinated on the next prompt.
 
-## Hands-On Workshop
+This project demonstrates the **95 / 5 Shift**:
+- **95% Understand, Define, and Validate the Problem** in a three-register specification triad (**ADRs + LIMs + Gherkin Feature Files**), audited as a whole by an independent **Specification Critic (`bdd-critic`)** and backed by language-neutral **Black-Box Steps**.
+- **5% Implement with AI:** Once the specification is complete and read-only, **Gemini** (via **Antigravity CLI**) generates the entire application autonomously in **any programming language** (Go, Python, Rust, TypeScript, Java…) until every BDD milestone passes. Application code becomes a disposable, replaceable build artifact.
 
-The [`/workshop`](./workshop/) directory contains a fully working BDD workshop that attendees can run themselves:
+---
 
-**EquiGuard — AI-Driven Geofencing & Event-Driven Architecture on Google Cloud**
+## The Five-Phase Development Cycle
 
-A GPS-based horse pasture monitoring system built exclusively from Gherkin feature files — no separate config, no magic values. The workshop has four milestones of increasing complexity:
+```text
+  Phase 1: Architecture Dialogue  →  governance/adr/ + governance/limitations/  (WHY / WHERE NOT)
+  Phase 2: Error Paths & Features →  bdd/00_error_path_enumeration.md + *.feature (WHAT — RED)
+  Phase 3: Specification Critic   →  Whole-picture review of Phases 1 + 2       (AUDITED)
+  Phase 4: Steps & Honesty Audit  →  bdd/steps/*_steps.py + §13 Step Audit      (STILL RED)
+  Phase 5: Code & Cloud Rollout   →  Autonomous build in ANY language + GCP MI4 (GREEN)
+```
 
-| Milestone | What it tests | Infrastructure |
-|---|---|---|
-| MI1 | Core point-in-polygon algorithm | Go CLI, no network |
-| MI2 | Full HTTP geofence processor | Firestore + Pub/Sub emulators |
-| MI3 | Containerised service | Docker + emulators |
-| MI4 | Live Cloud Run deployment | Real GCP (costs apply) |
+> **The Feedback Loop Rule:** Whatever the Specification Critic (Phase 3), the Step Honesty Audit (Phase 4), or Reality (Phase 5) finds modifies the **ADR, LIM, or Feature File first** — never directly the application code.
 
-The same Gherkin scenarios pass in all four milestones — only the execution environment changes. See [`/workshop/README.md`](./workshop/README.md) for setup instructions.
+---
 
-**BDD Guidelines** are available in [`BDD_GUIDELINES_v1.8.0_DE.md`](./BDD_GUIDELINES_v1.8.0_DE.md) (German) and [`BDD_GUIDELINES_v1.8.0_EN.md`](./BDD_GUIDELINES_v1.8.0_EN.md) (English).
+## Hands-On Workshop (`/workshop`)
 
-## Companion Governance: ADR + LIM
+The [`/workshop`](./workshop/) directory contains the complete hands-on workshop:
 
-The [`/governance`](./governance/) directory documents the **decision-and-debt governance** that complements the BDD Guidelines. Two small registers sit next to your `.feature` files:
+**EquiGuard — Event-Driven GPS Pasture Geofencing on Google Cloud**
 
-- **ADRs** (Architecture Decision Records) — one record per architectural decision, in the Nygard tradition with mandatory Security Implications and Alternatives Considered sections.
-- **LIMs** (Limitation Records) — a high-friction register for accepted, bounded weaknesses. Four-state lifecycle (Proposed → Accepted → Resolved / Withdrawn / Superseded), no-self-approval governance, paydown-commit-SHA traceability.
+Participants use **Antigravity CLI (`agy`)** and **Gemini** to walk through all five phases:
+1. Conduct the guided architecture dialogue (`prompts/01-architecture-dialogue.md`) to create **ADRs 0000–0004** and **LIMs 0001–0002**.
+2. Enumerate all 15 error paths (`bdd/00_error_path_enumeration.md`) and write the four Gherkin feature files (`prompts/02-error-paths-and-features.md`).
+3. Audit the specification as a whole with the **Specification Critic** (`prompts/03-spec-critic.md`).
+4. Generate language-neutral black-box Python `behave` steps (`prompts/04a-step-definitions.md`), audit them for test honesty (`prompts/04b-step-honesty-audit.md`), and verify the **RED** state.
+5. Run `make burn`, pick **any programming language**, and let Gemini autonomously implement the service (`prompts/05-autonomous-implementation.md`) until all milestones pass — locally and on live **Google Cloud Run**!
 
-Together with the BDD Guidelines they form a triad: the `.feature` files say *what* the system does, ADRs say *why* it's built that way, LIMs say *where* the project knowingly falls short. In an AI-driven workflow, all three are context the agent reads — and the LIM register is what tells the agent which "bugs" are deliberate. See [`governance/README.md`](./governance/README.md) for the framework overview and worked examples in the EquiGuard workshop's domain.
+| Milestone | Tag | What It Verifies | Environment |
+|---|---|---|---|
+| **MI1** | `@mi1` | Point-in-polygon ray-casting algorithm (`HomePasture` convex + `ComplexPasture` concave) | CLI (`stdin`/`stdout` JSON), no network |
+| **MI2** | `@mi2` | HTTP `geofence-processor` service + Pub/Sub push ingestion + Firestore persistence | Local Firestore (`:8082`) & Pub/Sub (`:8085`) emulators |
+| **MI3** | `@mi3` | Containerized OCI image (`GET /health`, port `8081`, HTTP `400` validation, behavioral equivalence) | Docker + local emulators |
+| **MI4** | `@mi4` | Live production deployment provisioned via Terraform (`project_id` read from Gherkin!) | Real GCP Cloud Run, Pub/Sub & Firestore |
+
+See [`/workshop/README.md`](./workshop/README.md) for the step-by-step participant guide and `Makefile` phase checkpoints (`make phase1-start`, `make checkpoint-adrs`, `make checkpoint-features`, `make burn`, `make restore-all`).
+
+---
+
+## BDD Guidelines v1.9.0 & Governance Triad
+
+- **BDD Guidelines v1.9.0:**
+  - English: [`BDD_GUIDELINES_v1.9.0_EN.md`](./BDD_GUIDELINES_v1.9.0_EN.md)
+  - German: [`BDD_GUIDELINES_v1.9.0_DE.md`](./BDD_GUIDELINES_v1.9.0_DE.md)
+  - Includes §3.4 (Verifying Configuration Data), §4.5 (Systematic Error Path Enumeration), §4.6 (Domain Signals in Feature Files), §13 (Step Honesty Spec-Audit), and §14 (Pre-Code Specification Critic `bdd-critic`).
+- **Companion Governance Framework (`/governance`):**
+  - Overview: [`governance/README.md`](./governance/README.md)
+  - Architecture Decision Records (ADRs): [`governance/adr/`](./governance/adr/)
+  - Limitation Records (LIMs): [`governance/limitations/`](./governance/limitations/)
 
 ---
 
 ## Repository Structure
 
-- **/slides**: Contains 19 Markdown files, each representing a slide. They are numbered to maintain the logical flow of the presentation.
-- **/workshop**: Hands-on BDD workshop with 4 milestones (see above).
-- **/governance**: ADR + LIM framework (companion to the BDD Guidelines).
-- **submission_data.md**: Contains the final title and abstracts (full and concise versions) for conference submissions.
-
-## Presentation Flow
-
-1.  **Introduction**: The new paradigm.
-2.  **Single Source of Truth**: Feature files as the primary contract for business behavior.
-3.  **Communication**: Bridging the gap to stakeholders.
-4.  **The Experiment**: Exploring how much of the system can be recovered from the specification.
-5.  **The Workflow**: AI-driven Red/Green cycle.
-6.  **Vibe Coding vs. Engineering**: Contrasting reproducible specs with ad-hoc chat chaos.
-7.  **Guardrails**: Preventing AI hallucinations.
-8.  **Speed Paradox**: Why "slow" BDD is now the fastest way to build.
-9.  **Language Agnosticism**: Technology choice as a minor detail.
-10. **Forensic Engineering**: Reproducing bugs and validating real outcomes.
-11. **Testing the Test**: Keeping glue code honest and behavior-focused.
-12. **Test Honesty**: Human review as the final guardrail against cheating tests.
-13. **Code as a Commodity**: Focusing on value, not syntax.
-14. **Longevity**: Solving onboarding and legacy code issues.
-15. **The Human Role**: The shift from coder to architect.
-16. **Conclusion**: A more industrialized approach to software development.
-
-## How to Use
-
-The slides are designed to be concise. They provide a clear visual statement while allowing the speaker to talk freely about the underlying concepts and real-world project experiences (e.g., `papersink`, `trellio`, `ddns`).
+- **[`/workshop`](./workshop/)**: Hands-on 5-phase BDD & ADR workshop with Antigravity CLI prompts, language-neutral harness, and 4 GCP milestones.
+- **[`/slides`](./slides/)**: Standalone offline **Reveal.js HTML deck** ([`slides/index.html`](./slides/index.html)) plus companion Markdown slide cards (`01`–`19`).
+- **[`/video-demo`](./video-demo/)**: Recording (`tmux` + live dashboard) and `ffmpeg` assembly pipeline for the autonomous rebuild kickoff video.
+- **[`/governance`](./governance/)**: ADR + LIM templates and framework documentation.
+- **[`submission_data.md`](./submission_data.md)**: Rethought title options, elevator pitch, abstracts (EN/DE), key takeaways, and workshop outline.
