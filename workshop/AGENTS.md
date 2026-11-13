@@ -2,7 +2,7 @@
 
 This file is binding for every AI coding agent working in this repository: **Antigravity CLI (`agy`)**, **Gemini CLI**, **Claude Code**, **OpenCode**, or **GitHub Copilot**. It is not a style guide. It defines how work is *sequenced* here, and what an agent must refuse to do out of order.
 
-Read this file completely before the first tool call of a session. Also read the authoritative guidelines in [`../BDD_GUIDELINES_v1.9.0_EN.md`](../BDD_GUIDELINES_v1.9.0_EN.md) (German edition: [`../BDD_GUIDELINES_v1.9.0_DE.md`](../BDD_GUIDELINES_v1.9.0_DE.md)).
+Read this file completely before the first tool call of a session. Also read the authoritative guidelines in [`BDD_GUIDELINES_v1.9.0_EN.md`](BDD_GUIDELINES_v1.9.0_EN.md) (German edition: [`BDD_GUIDELINES_v1.9.0_DE.md`](BDD_GUIDELINES_v1.9.0_DE.md)).
 
 ---
 
@@ -14,7 +14,7 @@ The three pillars of this repository — **conscious architecture decisions (ADR
 
 Therefore:
 
-- The agent **enforces** the rules in this file, in [`../BDD_GUIDELINES_v1.9.0_EN.md`](../BDD_GUIDELINES_v1.9.0_EN.md), and in [`governance/`](governance/).
+- The agent **enforces** the rules in this file, in [`BDD_GUIDELINES_v1.9.0_EN.md`](BDD_GUIDELINES_v1.9.0_EN.md), and in [`governance/`](governance/).
 - When a request would violate a rule (e.g., writing application code before an ADR or feature file exists, hardcoding magic values in step code, or asserting only an HTTP status code after a write), the agent **names the failure mode, cites the rule, and offers the compliant path**.
 - A deliberate, bounded shortcut against an ADR or feature file must be recorded as a **Limitation Record** in [`governance/limitations/`](governance/limitations/). The agent proposes; a human approves.
 
@@ -85,7 +85,7 @@ Before writing step definitions or application code, run an independent Specific
 
 - **Black-box contract:** The test suite uses Python `behave` in an isolated `.venv` and interacts with the system under test exclusively from the outside:
   - **MI1 (`@mi1`):** Invokes `./bin/geofence-lib-test` via `stdin`/`stdout` JSON (`{"point": {"lon": ..., "lat": ...}, "polygon": [...]}` → `{"is_inside": true|false}`).
-  - **MI2 (`@mi2`):** Starts `./bin/geofence-processor` with env vars (`PORT`, `FIRESTORE_EMULATOR_HOST`, `PUBSUB_EMULATOR_HOST`, `PROJECT_ID`), sends Pub/Sub push HTTP POSTs to `/telemetry-push`, and verifies documents directly in the Firestore emulator.
+  - **MI2 (`@mi2`):** Starts `./bin/geofence-processor` with env vars (`PORT`, `FIRESTORE_EMULATOR_HOST`, `PROJECT_ID`), sends Pub/Sub push HTTP POSTs to `/telemetry-push`, and verifies documents directly in the Firestore emulator.
   - **MI3 (`@mi3`):** Builds the Docker image `equiguard/geofence-processor:test` from `Dockerfile`, runs it as a container, verifies `GET /health`, port binding, valid/malformed payloads, and Firestore state.
   - **MI4 (`@mi4`):** Publishes to the real GCP Pub/Sub topic and verifies alerts in real Firestore against the live Cloud Run service provisioned by Terraform.
 - **Steps are dumb plumbing (Guidelines §1.3, §5.1):** Step definitions transport data from Gherkin into the system and observe results. They never calculate expected business values, never inject hidden business fields, and never import application code.

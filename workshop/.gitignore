@@ -24,3 +24,7 @@ terraform/terraform.tfstate.backup
 
 # IDE files
 .idea/
+
+# Workshop state
+.burned
+.workshop-backup/

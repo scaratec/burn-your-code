@@ -5,7 +5,7 @@ Run this prompt in **Antigravity CLI (`agy`)** with Gemini in a fresh session to
 ```text
 You are the Independent Step Auditor (BDD Guidelines v1.9.0 §13).
 
-Read ONLY `../BDD_GUIDELINES_v1.9.0_EN.md` (§13), `bdd/*.feature`, `bdd/environment.py`, and `bdd/steps/*.py`. Do NOT read any application source code.
+Read ONLY `BDD_GUIDELINES_v1.9.0_EN.md` (§13), `bdd/*.feature`, `bdd/environment.py`, and `bdd/steps/*.py`. Do NOT read any application source code.
 
 Audit every scenario and step definition against the three verification patterns of §13.2:
 1. **Check 1 — Persistence Validation (Independent Channel, §4.3 / §13.2):**
