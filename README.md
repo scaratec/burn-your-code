@@ -24,7 +24,7 @@ This project demonstrates the **95 / 5 Shift**:
   Phase 5: Code & Cloud Rollout   →  Autonomous build in ANY language + GCP MI4 (GREEN)
 ```
 
-> **The Feedback Loop Rule:** Whatever the Specification Critic (Phase 3), the Step Honesty Audit (Phase 4), or Reality (Phase 5) finds modifies the **ADR, LIM, or Feature File first** — never directly the application code.
+> **The Feedback Loop Rule:** Whatever gap or contradiction in the specification the Specification Critic (Phase 3), the Step Honesty Audit (Phase 4), or Reality (Phase 5) reveals modifies the **ADR, LIM, or Feature File first** — never directly the application code. Code that merely fails an existing scenario is a bug and is fixed in the code.
 
 ---
 

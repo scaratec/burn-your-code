@@ -66,7 +66,7 @@ Durations below are agent time from dry runs with `gemini-3.8-flash-high` on the
 - **What happens:** new rows in Layer 1 of the error path enumeration, then one new scenario outline `@mi1 @boundary` with the vertices and edge midpoints of HomePasture, points half and twice the tolerance beyond the fence, and negative controls 0.1 m beyond and inside it. The agent runs `make test-mi1` and explains the failures.
 - **Measured:** 3:49 and 6:08 (6:37 and 4:01–6:43 on the previous version with four rows fewer). This is the exercise most likely to run long — see the run of show for how to shorten it.
 - **Expected result** with the reference decision: **26 passed, 6 failed** (which rows, and why: answer key). The old code is not wrong everywhere — it is *undecided*.
-- **Debrief:** error paths first; the tolerance rows pin the `1e-9` down (half of it must be inside, twice of it outside), the negative controls show the fence is still a fence. Then announce that from now on everybody works on the reference decision.
+- **Debrief:** error paths first; the tolerance rows bound the `1e-9` (half of it must be inside, twice of it outside — a range, not proof of the exact value), the negative controls show the fence is still a fence. Then announce that from now on everybody works on the reference decision.
 
 ### Exercise 3 — Let the critic find the bugs
 

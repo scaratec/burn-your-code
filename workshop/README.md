@@ -44,7 +44,7 @@ All four exercises run locally against **milestone 1** (the geofence library as 
   Phase 5: Implementation          →  autonomous build in any language            (GREEN)
 ```
 
-> **Feedback loop rule:** whatever the critic, the step audit or reality finds changes the ADR, LIM or feature file first — never the application code directly.
+> **Feedback loop rule:** whatever gap in the specification the critic, the step audit or reality reveals changes the ADR, LIM or feature file first — never the application code directly. Code that fails an existing scenario is a bug and is fixed in the code.
 
 The guidelines behind it: [BDD Guidelines v1.9.0](BDD_GUIDELINES_v1.9.0_EN.md) ([Deutsch](BDD_GUIDELINES_v1.9.0_DE.md)).
 

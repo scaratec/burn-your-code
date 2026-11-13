@@ -302,12 +302,12 @@
               </div>
             </div>
             <div class="callout-bar callout-bar--dark">
-              <strong>Feedback loop rule:</strong> whatever the critic, the audit or reality finds changes the ADR, LIM or feature file first — never the code directly.
+              <strong>Feedback loop rule:</strong> a gap the critic, the audit or reality finds changes the ADR, LIM or feature file first — never the code directly. A failing scenario is just a bug: fix the code.
             </div>
           </div>
         </div>
         <aside class="notes">
-          Today you walk through phases 1, 2, 3 and 5. Phase 4 is the bonus.
+          Today you walk through phases 1, 2, 3 and 5. Phase 4 is the bonus. Make the distinction explicit: a gap in the specification goes back to ADR, LIM or feature file; code that fails an existing scenario is simply fixed — that is what the agent does in exercise 4.
         </aside>
       </section>
 
@@ -744,8 +744,8 @@
                 <p class="debrief-text">The old code says "outside" for some points on the fence and "inside" for others — and knows no tolerance.</p>
               </div>
               <div class="debrief-card">
-                <p class="debrief-label">TOLERANCE PINNING</p>
-                <p class="debrief-text">The tolerance rows pin the rule down: a tolerance that is too small or too large no longer turns green.</p>
+                <p class="debrief-label">TOLERANCE BOUNDS</p>
+                <p class="debrief-text">The tolerance rows bound the rule: a tolerance below half of <code class="code-inline">1e-9</code>° or from twice of it no longer turns green. They narrow the range — they do not prove the exact value.</p>
               </div>
               <div class="callout-bar callout-bar--blue callout-bar--compact">
                 From exercise 3 on, everybody works on the reference decision.
@@ -754,7 +754,7 @@
           </div>
         </div>
         <aside class="notes">
-          Three minutes. Ask: why do the eastern points fail? Then explain the tolerance rows: half the tolerance must be inside, twice must be outside. Announce that make ex3-start puts everybody on the reference decision.
+          Three minutes. Ask: why do the eastern points fail? Then explain the tolerance rows: half the tolerance must be inside, twice must be outside — a bounded range, not proof of the exact value; that is what GREEN can and cannot tell you. Announce that make ex3-start puts everybody on the reference decision.
         </aside>
       </section>
 

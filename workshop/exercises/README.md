@@ -29,7 +29,7 @@ All exercises run locally: Python, the Antigravity CLI (`agy`) and the model **G
 - Paste nothing by hand: each exercise starts with one `agy ... -i "$(cat .../PROMPT.md)"` command. `--mode auto` lets the agent edit files and run safe commands without asking. Auto mode needs a personal Google account; with a business account `agy` falls back to asking before each edit or command — press Shift+Tab once to switch to *accept edits*, then only commands need your `y`.
 - If `agy` asks before reading every single file, the folder was trusted only in this session: `/exit` and start the command again.
 - Fell behind? Every exercise has `make exN-start` (jump in) and `make exN-solution` (reference). Every checkpoint resets `workshop/` to that state; everything you wrote is packed into `.workshop-backup/<time>-<checkpoint>.tar.gz` first (`tar -tzf` lists it, `tar -xzf <archive> <path>` restores a file).
-- The feedback loop rule: whatever the critic or reality finds changes the **ADR, LIM or feature file first** — never the code directly.
+- The feedback loop rule: whatever **gap in the specification** the critic or reality reveals changes the **ADR, LIM or feature file first** — never the code directly. Code that fails an existing scenario (exercise 4) is a bug: the agent fixes the code.
 
 ## Agenda
 

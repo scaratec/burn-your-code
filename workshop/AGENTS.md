@@ -49,7 +49,7 @@ Each stage produces the input for the next. Never skip a stage.
   Stage 6: Application Code        →  autonomous build in chosen language   (GREEN)
 ```
 
-**The Feedback Loop Rule:** Whatever the Specification Critic (Stage 4), the Step Honesty Audit (Stage 5), or contact with reality (Stage 6) finds modifies the **ADR, Limitation Record, or Feature File first** — never directly the application code.
+**The Feedback Loop Rule:** Whatever gap or contradiction in the specification the Specification Critic (Stage 4), the Step Honesty Audit (Stage 5), or contact with reality (Stage 6) reveals modifies the **ADR, Limitation Record, or Feature File first** — never directly the application code. Code that fails an existing scenario is an implementation bug and is fixed in the code.
 
 ### 3.1 Stage 1 — Architecture Decisions (`governance/adr/`)
 
