@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Burn Your Code — Specification-First Engineering with Antigravity CLI &amp; Gemini</title>
+
+  <link rel="stylesheet" href="vendor/reveal.js/dist/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="vendor/reveal.js/dist/theme/black.css" id="theme">
+
+  <style>
+    :root{
+      --g-blue:#4285F4; --g-red:#EA4335; --g-yellow:#FBBC04; --g-green:#34A853;
+      --ink:#e8eaed; --muted:#9aa0a6; --bg:#0b0f19; --card:#111832; --border:#232c49;
+    }
+    .reveal{ font-family: "Google Sans","Roboto",system-ui,-apple-system,sans-serif; color:var(--ink); }
+    .reveal .slides{ text-align:left; }
+    .reveal section{ padding:0; }
+    body{ background:var(--bg); }
+    .reveal .slide-background{ background:radial-gradient(1200px 600px at 20% -10%, #14213d 0%, var(--bg) 60%); }
+
+    .reveal h1,.reveal h2,.reveal h3{ font-weight:700; letter-spacing:-.01em; text-transform:none; margin:0 0 .3em 0; }
+    .reveal h1{ font-size:2.15em; line-height:1.08; }
+    .reveal h2{ font-size:1.5em; line-height:1.15; }
+    .reveal h3{ font-size:1.02em; color:var(--muted); font-weight:500; }
+    .reveal strong{ color:#fff; }
+    .reveal em{ color:var(--g-yellow); font-style:normal; }
+
+    .gdots span{ display:inline-block; width:.42em; height:.42em; border-radius:50%; margin-right:.28em; }
+    .gdots .b{background:var(--g-blue)} .gdots .r{background:var(--g-red)}
+    .gdots .y{background:var(--g-yellow)} .gdots .g{background:var(--g-green)}
+
+    .kicker{ color:var(--g-blue); font-weight:700; letter-spacing:.12em; text-transform:uppercase; font-size:.46em; margin-bottom:.35em; }
+    .muted{ color:var(--muted); }
+    .small{ font-size:.66em; line-height:1.4; }
+    .tiny{ font-size:.52em; color:var(--muted); line-height:1.35; }
+
+    .pills{ display:flex; gap:.45em; flex-wrap:wrap; margin-top:.45em; }
+    .pill{ border:1px solid #2a3350; border-radius:999px; padding:.24em .75em; font-size:.56em; color:var(--ink); background:var(--card); }
+    .pill.blue{ border-color:var(--g-blue); color:#cfe0ff; }
+    .pill.green{ border-color:var(--g-green); color:#c7f0d4; }
+    .pill.yellow{ border-color:var(--g-yellow); color:#fdeec0; }
+    .pill.red{ border-color:var(--g-red); color:#fad2cf; }
+
+    .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.1em; align-items:stretch; }
+    .cols3{ display:grid; grid-template-columns:repeat(3,1fr); gap:.9em; align-items:stretch; }
+    .cols4{ display:grid; grid-template-columns:repeat(4,1fr); gap:.75em; align-items:stretch; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:.75em .9em; }
+    .card.old{ border-color:rgba(234,67,53,.55); background:rgba(234,67,53,.07); }
+    .card.new{ border-color:rgba(52,168,83,.65); background:rgba(52,168,83,.08); }
+    .card.hi{ border-color:var(--g-blue); background:rgba(66,133,244,.1); }
+    .card.warn{ border-color:var(--g-yellow); background:rgba(251,188,4,.08); }
+    .card h3{ color:#fff; margin:.1em 0 .35em; font-weight:700; font-size:.88em; }
+    .card p, .card li{ font-size:.62em; color:var(--ink); line-height:1.38; margin:.2em 0; }
+    .card ul{ margin:0; padding-left:1.1em; }
+    .tag{ display:inline-block; font-size:.46em; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:.18em .55em; border-radius:6px; margin-bottom:.35em; background:#1c2747; color:#8ab4f8; }
+    .card.old .tag{ background:rgba(234,67,53,.22); color:#f28b82; }
+    .card.new .tag{ background:rgba(52,168,83,.22); color:#81c995; }
+    .card.warn .tag{ background:rgba(251,188,4,.22); color:#fde293; }
+
+    /* Key Slide: 5-Phase Cycle */
+    .cycle{ display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr; gap:.35em; align-items:stretch; margin-top:.4em; }
+    .cstep{ background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:.6em .65em; display:flex; flex-direction:column; justify-content:space-between; }
+    .cstep.gov{ border-color:var(--g-blue); }
+    .cstep.red{ border-color:var(--g-red); }
+    .cstep.critic{ border-color:var(--g-yellow); background:rgba(251,188,4,.09); }
+    .cstep.green{ border-color:var(--g-green); background:rgba(52,168,83,.09); }
+    .cstep .cno{ font-size:.46em; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    .cstep.gov .cno{ color:#8ab4f8; }
+    .cstep.red .cno{ color:#f28b82; }
+    .cstep.critic .cno{ color:#fde293; }
+    .cstep.green .cno{ color:#81c995; }
+    .cstep .ctitle{ font-size:.72em; font-weight:700; color:#fff; margin:.18em 0 .12em; line-height:1.15; }
+    .cstep .cwho{ font-size:.48em; color:#8ab4f8; font-weight:600; margin-bottom:.25em; }
+    .cstep .cdesc{ font-size:.5em; color:var(--ink); line-height:1.32; margin:0 0 .35em 0; }
+    .cstep .cout{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.44em; padding:.22em .4em; border-radius:6px; background:#090d16; color:#cfe0ff; border:1px solid #1e2946; }
+    .carrow{ display:flex; align-items:center; font-size:.9em; color:var(--muted); font-weight:700; }
+
+    .loopbar{ margin-top:.55em; padding:.5em .8em; border-radius:10px; border:1px solid var(--g-yellow); background:rgba(251,188,4,.1); font-size:.58em; line-height:1.35; }
+    .loopbar strong{ color:var(--g-yellow); }
+
+    /* Speaker slide */
+    .speaker{ display:grid; grid-template-columns:auto 1fr; gap:1.4em; align-items:center; }
+    .speaker img.avatar{ width:220px; height:220px; object-fit:cover; border-radius:22px;
+      box-shadow:0 0 0 3px #0b0f19, 0 0 0 6px var(--g-blue); }
+    .badges{ display:flex; gap:.7em; align-items:center; flex-wrap:wrap; margin-top:.3em; }
+    .badges .gde{ height:64px; width:auto; border-radius:10px; }
+    .badges .cert{ height:74px; width:74px; background:#fff; border-radius:50%; padding:3px; }
+
+    .kbd{ font-family:ui-monospace,Menlo,Consolas,monospace; background:#0d1426; border:1px solid #2a3350;
+      border-radius:6px; padding:.06em .4em; font-size:.86em; color:#cfe0ff; }
+    pre.codebox{ background:#080c14; border:1px solid #232c49; border-radius:10px; padding:.6em .75em; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.48em; line-height:1.38; color:#e8eaed; margin:.25em 0; overflow:hidden; }
+    pre.codebox .kw{ color:#8ab4f8; font-weight:700; }
+    pre.codebox .str{ color:#81c995; }
+    pre.codebox .cmt{ color:#6e7681; }
+    pre.codebox .hl{ color:#fde293; font-weight:700; }
+
+    .statRow{ display:grid; grid-template-columns:repeat(4,1fr); gap:.75em; margin:.45em 0; }
+    .statBox{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:.55em .7em; text-align:center; }
+    .statBox .big{ font-size:1.55em; font-weight:800; color:var(--g-blue); line-height:1.05; display:block; }
+    .statBox .lbl{ font-size:.5em; color:var(--muted); line-height:1.25; margin-top:.2em; display:block; }
+  </style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- SLIDE 1: TITLE -->
+  <section>
+    <div class="gdots"><span class="b"></span><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <div class="kicker">Hands-On Workshop · Antigravity CLI · Gemini · Google Cloud</div>
+    <h1>Burn Your Code<br><span style="font-size:.62em; color:#8ab4f8">Specification-First Engineering for Autonomous AI Agents</span></h1>
+    <h3 style="margin-top:.45em">How to engineer ADRs, Limitation Records, and Gherkin Feature Files so complete<br>that <em>Gemini</em> builds and ships your service autonomously in <strong>any language</strong>.</h3>
+    <div class="pills">
+      <span class="pill blue">1 · ADRs &amp; LIMs</span>
+      <span class="pill red">2 · Error Paths &amp; Gherkin</span>
+      <span class="pill yellow">3 · Specification Critic</span>
+      <span class="pill red">4 · Black-Box Steps (RED)</span>
+      <span class="pill green">5 · Autonomous Polyglot Build &amp; Cloud Run</span>
+    </div>
+    <p class="tiny" style="margin-top:1.1em">Randy N. Gupta · Google Developer Expert (Cloud &amp; AI) · github.com/scaratec/burn-your-code</p>
+    <aside class="notes">
+      Welcome everyone! Today we are going to flip the way you work with AI coding agents upside down.
+      Our goal in this workshop is to use Antigravity CLI and Gemini to write Architecture Decision Records, Feature Files, and Black-Box Steps so tight that Gemini can generate the entire software autonomously in ANY programming language — and roll it out to Google Cloud Run.
+    </aside>
+  </section>
+
+  <!-- SLIDE 2: SPEAKER -->
+  <section>
+    <div class="kicker">Your Workshop Host</div>
+    <div class="speaker">
+      <img class="avatar" src="assets/randy.jpg" alt="Randy N. Gupta">
+      <div>
+        <h2 style="margin:0">Randy N. Gupta</h2>
+        <p class="muted small" style="margin:.15em 0 .5em">Google Developer Expert (Cloud AI &amp; AI) · Google Cloud Certified Professional Cloud Architect</p>
+        <div class="badges">
+          <img class="gde" src="assets/badges/gde-cloud-ai.png" alt="GDE Cloud AI">
+          <img class="gde" src="assets/badges/gde-ai.png" alt="GDE AI">
+          <img class="cert" src="assets/badges/cert-pca.png" alt="Professional Cloud Architect">
+        </div>
+        <p class="small" style="margin-top:.65em">30+ years in software architecture. Building production systems where <strong>specifications are permanent</strong> and <em>application code is a disposable build artifact</em>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: THE HOUSE OF CARDS -->
+  <section>
+    <div class="kicker">The Starting Point</div>
+    <h2>AI writes code faster than we make <em>decisions</em>.</h2>
+    <div class="cols" style="margin-top:.5em; align-items:center">
+      <div>
+        <p class="small">An AI agent can produce more code in an hour than a team can review in a day. It looks like velocity — until you touch it.</p>
+        <ul class="small" style="margin-top:.5em">
+          <li>Every file leans on an <strong>unwritten assumption</strong>.</li>
+          <li>The agent has <strong>zero memory across sessions</strong> — only what is committed to the repo survives.</li>
+          <li>Decisions not written down are <strong>re-negotiated or hallucinated</strong> in every prompt.</li>
+        </ul>
+      </div>
+      <div style="text-align:center">
+        <svg viewBox="0 0 520 300" style="width:100%; max-width:420px; height:auto" aria-hidden="true">
+          <g stroke="#5A6B8C" stroke-width="2" fill="#18223D">
+            <rect x="-5" y="0" width="10" height="90" transform="translate(120,210) rotate(-32)" fill="#EA4335" stroke="#EA4335"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(120,210) rotate(20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(260,210) rotate(-20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(260,210) rotate(20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(400,210) rotate(-20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(400,210) rotate(20)"/>
+            <rect x="89"  y="200" width="202" height="9"/>
+            <rect x="229" y="200" width="202" height="9"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(190,112) rotate(-20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(190,112) rotate(20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(330,112) rotate(-20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(330,112) rotate(20)"/>
+            <rect x="159" y="102" width="202" height="9"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(260,14) rotate(-20)"/>
+            <rect x="-5" y="0" width="10" height="90" transform="translate(260,14) rotate(20)"/>
+          </g>
+        </svg>
+        <p class="tiny">The red card at the bottom is the unverified assumption you only notice when the house stands.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Pause here. An agent produces code faster than we make decisions. Without recorded decisions and executable specifications, you get a house of cards.
+    </aside>
+  </section>
+
+  <!-- SLIDE 4: SAME MODEL, TWO OUTCOMES -->
+  <section>
+    <div class="kicker">Empirical Evidence · Same Model, Two Runs</div>
+    <h2>The difference is in the <em>specification</em>, not the model.</h2>
+    <div class="cols" style="margin-top:.45em">
+      <div class="card old">
+        <span class="tag">Unguided · "Vibe Coding"</span>
+        <h3>Free Agent Mode</h3>
+        <ul>
+          <li>55 files, 1,344 lines of code generated in hours</li>
+          <li><strong>Zero</strong> architecture decisions documented</li>
+          <li>Error cases guessed ad-hoc or silently ignored</li>
+          <li>Tests coupled to implementation internals — or confirming hardcoded stubs</li>
+          <li>Manual hotfixes wiped out on the next agent pass</li>
+        </ul>
+      </div>
+      <div class="card new">
+        <span class="tag">Guided · Specification-First</span>
+        <h3>Structured Bootstrap</h3>
+        <ul>
+          <li><strong>Architecture Decisions (ADRs)</strong> + <strong>Limitation Records (LIMs)</strong> settled first</li>
+          <li>Error paths systematically counted layer by layer (§4.5)</li>
+          <li>Executable Gherkin scenarios with positive &amp; negative controls</li>
+          <li>Pre-audited by an independent <strong>Specification Critic</strong></li>
+          <li>Cleanly <strong>RED</strong> before the first line of application code exists</li>
+        </ul>
+      </div>
+    </div>
+    <p class="tiny" style="margin-top:.55em">Both runs used the exact same frontier model. Left: technical debt from day one. Right: a specification that any model can implement reproducibly.</p>
+  </section>
+
+  <!-- SLIDE 5: THE 95 / 5 EINSTEIN SHIFT -->
+  <section>
+    <div class="kicker">The Paradigm Shift · Engineering Methodology</div>
+    <h2><em>95%</em> Understand, Define &amp; Validate · <strong>5%</strong> Implement with AI</h2>
+    <div class="card hi" style="margin:.4em 0 .65em">
+      <p style="font-size:.68em; margin:0"><em>"If I had an hour to solve a problem, I'd spend 55 minutes thinking about the problem and 5 minutes thinking about solutions."</em> — A. Einstein</p>
+    </div>
+    <div class="cols4">
+      <div class="card">
+        <span class="tag">1 · 95% Foundation</span>
+        <h3>Good Requirements</h3>
+        <p>Understand the real need, boundaries, and failure modes before coding.</p>
+      </div>
+      <div class="card">
+        <span class="tag">2 · 95% Foundation</span>
+        <h3>Architecture Standards</h3>
+        <p>Make decisions (<strong>ADRs</strong>) and trade-offs (<strong>LIMs</strong>) explicit and permanent.</p>
+      </div>
+      <div class="card">
+        <span class="tag">3 · 95% Foundation</span>
+        <h3>Executable Test Design</h3>
+        <p>Make behavior verifiable from the outside (<strong>BDD + Critic Audit</strong>).</p>
+      </div>
+      <div class="card new">
+        <span class="tag">4 · 5% Execution</span>
+        <h3>Autonomous AI Build</h3>
+        <p>Generate, verify, and replace code in <strong>any language</strong> on demand.</p>
+      </div>
+    </div>
+    <p class="small" style="margin-top:.55em; text-align:center"><strong>Human Accountability:</strong> AI accelerates implementation. It replaces neither engineering method nor human responsibility.</p>
+  </section>
+
+  <!-- SLIDE 6: OPENING VIDEO CUE -->
+  <section>
+    <div class="kicker">Kickoff Demo Video · Watch First, Then Build</div>
+    <h2>One Prompt. Zero Lines of Code. <em>Autonomous Service.</em></h2>
+    <div class="statRow">
+      <div class="statBox"><span class="big">0</span><span class="lbl">Lines of application code<br>at the start (<span class="kbd">make burn</span>)</span></div>
+      <div class="statBox"><span class="big">Read-Only</span><span class="lbl">ADRs, LIMs, Features &amp; Steps<br>locked against agent edits</span></div>
+      <div class="statBox"><span class="big">1 Prompt</span><span class="lbl">Antigravity CLI (<span class="kbd">agy</span>) + Gemini<br>zero human intervention</span></div>
+      <div class="statBox"><span class="big" style="color:var(--g-green)">2× Green</span><span class="lbl">All local milestones (MI1–MI3)<br>verified twice in a row</span></div>
+    </div>
+    <div class="cols" style="margin-top:.45em">
+      <div class="card">
+        <h3>What you see in the video</h3>
+        <ul>
+          <li><strong>Left pane:</strong> Antigravity CLI (<span class="kbd">agy</span>) reading the ADRs, LIMs, and Gherkin features, then building the CLI, HTTP service, and Dockerfile.</li>
+          <li><strong>Right pane:</strong> Live telemetry dashboard tracking elapsed time, read-only spec inputs, and generated code.</li>
+        </ul>
+      </div>
+      <div class="card new">
+        <h3>Proven at Enterprise Scale</h3>
+        <ul>
+          <li>Production MCP Server rebuild: <strong>383 / 387 scenarios green</strong> in one autonomous run (14 features, 13 ADRs, 8 LIMs, ~$27 model cost).</li>
+          <li>Even smaller/faster models succeed when the specification leaves zero ambiguity.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      Play the autonomous EquiGuard build video here! Point out that the specification is mounted read-only: the agent cannot cheat by editing the tests.
+    </aside>
+  </section>
+
+  <!-- SLIDE 7: THE KEY SLIDE — THE 5-PHASE DEVELOPMENT CYCLE -->
+  <section>
+    <div class="kicker">The Key Slide · Our Workshop Roadmap Today</div>
+    <h2>From a Naive Sentence to a Running Cloud Service</h2>
+    <div class="cycle">
+      <div class="cstep gov">
+        <div>
+          <div class="cno">Phase 1 · Dialogue</div>
+          <div class="ctitle">ADRs &amp; LIMs</div>
+          <div class="cwho">Human decides · Agent asks 1-by-1</div>
+          <p class="cdesc">Guided dialogue: options, recommendation, consequences. Language left open!</p>
+        </div>
+        <div class="cout">→ 4 ADRs · 2 LIMs (WHY / WHERE NOT)</div>
+      </div>
+      <div class="carrow">→</div>
+      <div class="cstep red">
+        <div>
+          <div class="cno">Phase 2 · Spec</div>
+          <div class="ctitle">Error Paths &amp; Features</div>
+          <div class="cwho">Agent drafts · Human approves</div>
+          <p class="cdesc">Count error paths first (§4.5), then write Gherkin (<span class="kbd">mi1</span>–<span class="kbd">mi4</span>). Zero magic values.</p>
+        </div>
+        <div class="cout">→ 15 Error Paths · 4 Features (WHAT)</div>
+      </div>
+      <div class="carrow">→</div>
+      <div class="cstep critic">
+        <div>
+          <div class="cno">Phase 3 · Critic</div>
+          <div class="ctitle">Whole-Picture Audit</div>
+          <div class="cwho">Reads Phase 1 + 2 (MD/Gherkin only)</div>
+          <p class="cdesc">Finds contradictions, uncovered ADR rules, missing negative controls before code.</p>
+        </div>
+        <div class="cout">↩ Fixes go back to ADR / LIM / Feature</div>
+      </div>
+      <div class="carrow">→</div>
+      <div class="cstep red">
+        <div>
+          <div class="cno">Phase 4 · Harness</div>
+          <div class="ctitle">Steps &amp; §13 Audit (RED)</div>
+          <div class="cwho">Black-box Python behave + Reviewer</div>
+          <p class="cdesc">Language-neutral CLI/HTTP/Docker steps + Firestore independent channel check.</p>
+        </div>
+        <div class="cout">→ Suite runs &amp; fails cleanly RED</div>
+      </div>
+      <div class="carrow">→</div>
+      <div class="cstep green">
+        <div>
+          <div class="cno">Phase 5 · Build</div>
+          <div class="ctitle">Code &amp; GCP (GREEN)</div>
+          <div class="cwho">Gemini builds in ANY language</div>
+          <p class="cdesc">Autonomous implementation until 2× green, then Terraform rollout to Cloud Run.</p>
+        </div>
+        <div class="cout">→ MI1–MI4 GREEN · Live on GCP</div>
+      </div>
+    </div>
+    <div class="loopbar">
+      <strong>Feedback Loop at Every Stage:</strong> Whatever the Specification Critic (Phase 3), the Step Honesty Audit (Phase 4), or Reality (Phase 5) uncovers modifies the <strong>ADR, LIM, or Feature File FIRST</strong> — never directly the application code.
+    </div>
+    <aside class="notes">
+      This is the central slide of the entire workshop. Walk through all five phases and emphasize the feedback loop bar at the bottom: a bug fixed only in code is lost the next time you burn the code. A bug fixed in the specification stays solved forever.
+    </aside>
+  </section>
+
+  <!-- SLIDE 8: THE WORKSHOP SYSTEM — EQUIGUARD -->
+  <section>
+    <div class="kicker">The Workshop System · EquiGuard</div>
+    <h2>Event-Driven GPS Geofencing on <em>Google Cloud</em></h2>
+    <div class="cols" style="margin-top:.4em">
+      <div class="card">
+        <h3>Hexagonal Cloud Architecture</h3>
+        <pre class="codebox">GPS Collar Ping (Lilly / Honey)
+   │  {"device","lon","lat","timestamp","zone"}
+   ▼
+Pub/Sub Topic (equiguard-telemetry)
+   │  push subscription (POST /telemetry-push)
+   ▼
+Cloud Run: geofence-processor
+   ├─► reads polygon: Firestore (geofences/&lt;zone&gt;)
+   └─► writes alert:  Firestore (alerts/&lt;doc&gt;)</pre>
+        <p class="tiny" style="margin-top:.35em">Same Gherkin scenarios run locally against emulators and in the cloud against live GCP.</p>
+      </div>
+      <div class="card hi">
+        <h3>Four Progressive Milestones</h3>
+        <ul>
+          <li><strong>MI1 (<span class="kbd">@mi1</span>):</strong> Core Ray-Casting CLI (<span class="kbd">./bin/geofence-lib-test</span>) — convex <span class="kbd">HomePasture</span> &amp; concave <span class="kbd">ComplexPasture</span>.</li>
+          <li><strong>MI2 (<span class="kbd">@mi2</span>):</strong> HTTP service (<span class="kbd">./bin/geofence-processor</span>) + local Firestore &amp; Pub/Sub emulators.</li>
+          <li><strong>MI3 (<span class="kbd">@mi3</span>):</strong> Containerized OCI image (<span class="kbd">Dockerfile</span>) + HTTP 400 validation.</li>
+          <li><strong>MI4 (<span class="kbd">@mi4</span>):</strong> Live Google Cloud Run + real Pub/Sub &amp; Firestore via Terraform.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: PHASE 1 — ADRs & LIMs -->
+  <section>
+    <div class="kicker">Phase 1 Hands-On · Governance Triad</div>
+    <h2>Three Registers, Three Questions — <em>Before Code</em></h2>
+    <div class="cols3" style="margin-top:.4em">
+      <div class="card hi">
+        <span class="tag">governance/adr/</span>
+        <h3>1 · ADR: Why?</h3>
+        <p>Every structural choice with Context, Decision, Consequences, <strong>Security Implications</strong>, and <strong>Alternatives Considered</strong>.</p>
+        <p class="tiny">ADR-0001: Ray casting over winding number<br>ADR-0002: Pub/Sub push to Cloud Run<br>ADR-0003: Firestore schema<br>ADR-0004: Language-neutral test seam</p>
+      </div>
+      <div class="card warn">
+        <span class="tag">governance/limitations/</span>
+        <h3>2 · LIM: Where Not?</h3>
+        <p>Every deliberate V1 shortcut with residual risk and revisit triggers. <strong>What is not in a LIM is a bug.</strong> Tells the agent what <em>not</em> to "fix".</p>
+        <p class="tiny">LIM-0001: Single static polygon per pasture<br>LIM-0002: Stateless per-ping evaluation (no deduplication)</p>
+      </div>
+      <div class="card new">
+        <span class="tag">bdd/*.feature</span>
+        <h3>3 · Feature: What?</h3>
+        <p>Executable behavior in domain language. The single source of truth that both stakeholders and test runners execute.</p>
+        <p class="tiny">4 Feature files across MI1–MI4 + <span class="kbd">00_error_path_enumeration.md</span></p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.55em; padding:.5em .8em">
+      <p style="font-size:.58em; margin:0"><strong>Your Phase 1 Task in Antigravity CLI (<span class="kbd">agy</span>):</strong> Run <span class="kbd">make phase1-start</span>, then paste <span class="kbd">prompts/01-architecture-dialogue.md</span>. Answer the agent's questions one by one to generate ADRs 0001–0004 and LIMs 0001–0002. <em>(Fast-forward checkpoint: <span class="kbd">make checkpoint-adrs</span>)</em></p>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: PHASE 2 — ERROR PATHS & FEATURE FILES -->
+  <section>
+    <div class="kicker">Phase 2 Hands-On · Executable Specification (BDD Guidelines v1.9.0)</div>
+    <h2>Count Error Paths First. Specify Positive <em>and</em> Negative Controls.</h2>
+    <div class="cols" style="margin-top:.4em">
+      <div>
+        <p class="tiny" style="margin-bottom:.2em"><strong>Positive Path (<span class="kbd">Lilly</span> leaves the pasture → Alert written)</strong></p>
+        <pre class="codebox"><span class="kw">Scenario:</span> Alert when a horse leaves the pasture
+  <span class="kw">When</span> the service receives a Pub/Sub push event
+       on <span class="str">"/telemetry-push"</span> for <span class="str">"Lilly"</span>:
+    """
+    {"device": "Lilly", "lon": <span class="hl">9.6116704</span>, "lat": <span class="hl">53.2275266</span>,
+     "timestamp": "2026-02-25T14:00:00Z", "zone": "HomePasture"}
+    """
+  <span class="kw">Then</span> the Firestore collection <span class="str">"alerts"</span> should eventually
+       contain a record for <span class="str">"Lilly"</span> within 10 seconds:
+    | field | value              |
+    | type  | GEOFENCE_VIOLATION |
+    | zone  | HomePasture        |</pre>
+      </div>
+      <div>
+        <p class="tiny" style="margin-bottom:.2em"><strong>Negative Control (<span class="kbd">Honey</span> stays inside → No alert)</strong></p>
+        <pre class="codebox"><span class="kw">Scenario:</span> No alert when a horse remains inside
+  <span class="kw">When</span> the service receives a Pub/Sub push event
+       on <span class="str">"/telemetry-push"</span> for <span class="str">"Honey"</span>:
+    """
+    {"device": "Honey", "lon": <span class="hl">9.6113700</span>, "lat": <span class="hl">53.2280821</span>,
+     "timestamp": "2026-02-25T14:05:00Z", "zone": "HomePasture"}
+    """
+  <span class="kw">Then</span> the Firestore collection <span class="str">"alerts"</span> should <span class="hl">not</span>
+       contain a record for <span class="str">"Honey"</span> within 2 seconds</pre>
+        <p class="tiny" style="margin-top:.3em">Without the negative control on the right, a service that writes an alert for <em>every</em> request would pass the left scenario!</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.45em; padding:.5em .8em">
+      <p style="font-size:.58em; margin:0"><strong>Your Phase 2 Task:</strong> Run <span class="kbd">prompts/02-error-paths-and-features.md</span> in <span class="kbd">agy</span> to enumerate all 15 error paths (<span class="kbd">bdd/00_error_path_enumeration.md</span>) and write <span class="kbd">mi1</span>–<span class="kbd">mi4</span> with zero magic values.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: PHASE 3 — THE SPECIFICATION CRITIC -->
+  <section>
+    <div class="kicker">Phase 3 Hands-On · The Specification Critic (Guidelines §14)</div>
+    <h2>Each Register Audits the Others — <em>Before Code Exists</em></h2>
+    <div class="cols" style="margin-top:.4em">
+      <div class="card warn">
+        <span class="tag">bdd-critic · Markdown &amp; Gherkin Only</span>
+        <h3>The Six Verification Edges</h3>
+        <ul>
+          <li><strong>1 · Binding Set:</strong> Do ADR/LIM indexes and statuses agree?</li>
+          <li><strong>2 · Record ↔ Record:</strong> Conflicting ports, schemas, or rules across ADRs?</li>
+          <li><strong>3 · Feature ↔ Feature:</strong> Identical payloads and coordinates across MI1–MI4?</li>
+          <li><strong>4 · ADR ↔ Feature &amp; Error Paths:</strong> Every decided rule has a scenario; every scenario cites an ADR (<span class="kbd"># Source:</span>).</li>
+          <li><strong>5 · LIM ↔ Both:</strong> Every deliberate V1 shortcut is backed by a LIM.</li>
+          <li><strong>6 · Scenario Honesty:</strong> Can every <span class="kbd">Then</span> fail? Are boundary cases covered?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Why This Works</span>
+        <h3>1 : 5.5 Specification Compactness</h3>
+        <p>In source code, architectural reasons don't exist at all, and expectations are buried across mocks and fixtures.</p>
+        <p style="margin-top:.45em">In Markdown + Gherkin, <strong>every line is a claim</strong>. The entire specification of a service fits into one context window so an independent Critic Agent can cross-examine every claim at once.</p>
+        <p class="tiny" style="margin-top:.45em"><em>Real-world proof:</em> On our alerting Terraform module (30 ADRs, 11 LIMs, 7 features), <span class="kbd">bdd-critic</span> found 24 defects — 3 blocking — without opening a single line of code.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.45em; padding:.5em .8em">
+      <p style="font-size:.58em; margin:0"><strong>Your Phase 3 Task:</strong> Open a fresh <span class="kbd">agy</span> session and run <span class="kbd">prompts/03-spec-critic.md</span>. Fix any findings in your ADRs, LIMs, or Feature Files! <em>(Checkpoint: <span class="kbd">make checkpoint-features</span>)</em></p>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: PHASE 4 — STEPS & TEST HONESTY -->
+  <section>
+    <div class="kicker">Phase 4 Hands-On · Black-Box Steps &amp; Test Honesty (§13 Spec-Audit)</div>
+    <h2>Language-Neutral Seams &amp; <em>Independent Channels</em></h2>
+    <div class="cols" style="margin-top:.4em">
+      <div class="card hi">
+        <span class="tag">ADR-0004 · 100% Language-Neutral</span>
+        <h3>Black-Box Contracts</h3>
+        <ul>
+          <li><strong>MI1 CLI:</strong> <span class="kbd">./bin/geofence-lib-test</span> (<span class="kbd">stdin</span> JSON → <span class="kbd">stdout</span> JSON <span class="kbd">{"is_inside": bool}</span>).</li>
+          <li><strong>MI2 Service:</strong> <span class="kbd">./bin/geofence-processor</span> (env vars <span class="kbd">PORT</span>, <span class="kbd">FIRESTORE_EMULATOR_HOST</span>, <span class="kbd">PROJECT_ID</span>).</li>
+          <li><strong>MI3 Container:</strong> <span class="kbd">Dockerfile</span> → <span class="kbd">equiguard/geofence-processor:test</span>.</li>
+          <li><strong>MI4 Cloud:</strong> Terraform outputs + real Pub/Sub &amp; Firestore.</li>
+        </ul>
+      </div>
+      <div class="card old">
+        <span class="tag">Guidelines §13 · Step Honesty Audit</span>
+        <h3>Three Rules Against Cheating LLMs</h3>
+        <ul>
+          <li><strong>1 · Independent Channel (§13.2):</strong> Never trust HTTP 200 alone! Read the <span class="kbd">alerts</span> collection directly from Firestore.</li>
+          <li><strong>2 · Value Provenance:</strong> Every expected value in <span class="kbd">Then</span> comes from Gherkin, never computed in Python.</li>
+          <li><strong>3 · Data Symmetry:</strong> Steps are dumb plumbing — zero hidden business fields or repairs.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.45em; padding:.5em .8em">
+      <p style="font-size:.58em; margin:0"><strong>Your Phase 4 Task:</strong> Run <span class="kbd">prompts/04a-step-definitions.md</span>, audit with <span class="kbd">prompts/04b-step-honesty-audit.md</span>, and run <span class="kbd">make test-mi1</span> to see it fail <strong>cleanly RED</strong>! <em>(Checkpoint: <span class="kbd">make burn</span>)</em></p>
+    </div>
+  </section>
+
+  <!-- SLIDE 13: PHASE 5 — AUTONOMOUS POLYGLOT BUILD & GCP ROLLOUT -->
+  <section>
+    <div class="kicker">Phase 5 Hands-On · Autonomous Polyglot Build &amp; Cloud Run Rollout</div>
+    <h2>Pick <em>Any Language</em>. Let Gemini Build &amp; Ship It.</h2>
+    <div class="cols" style="margin-top:.4em">
+      <div class="card new">
+        <span class="tag">Step 1 · Local Autonomous Build (MI1–MI3)</span>
+        <h3><span class="kbd">make burn</span> → Choose Your Language!</h3>
+        <pre class="codebox"># 1. Ensure 0 lines of app code (Spec + Steps only)
+make burn
+
+# 2. Launch Antigravity CLI with Gemini:
+#    "Implement EquiGuard in Python / Go / Rust / TypeScript
+#     until make test-all passes twice in a row."
+agy --model gemini-4-argon-high
+
+# 3. Verify all local milestones:
+make test-all</pre>
+        <p class="tiny">Whether Gemini writes Go, Python, Rust, or TypeScript, the exact same 25 local BDD scenarios verify behavioral equivalence.</p>
+      </div>
+      <div class="card hi">
+        <span class="tag">Step 2 · Live Google Cloud Run Rollout (MI4)</span>
+        <h3>One Edit in Gherkin → Live on GCP</h3>
+        <pre class="codebox"># 1. Edit project_id in bdd/mi4_cloud_run.feature
+#    (Single Source of Truth for Make, Docker &amp; Terraform!)
+
+# 2. Provision Artifact Registry, Cloud Run &amp; Pub/Sub:
+make tf-apply
+
+# 3. Run the identical BDD scenarios against live GCP:
+make test-mi4
+
+# 4. Always clean up after the workshop:
+make teardown-mi4</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 14: CONCLUSION & RESOURCES -->
+  <section>
+    <div class="kicker">Takeaway &amp; Resources</div>
+    <h2>The Specification Is the Source Code.<br><em>Everything Else Is a Build Artifact.</em></h2>
+    <div class="cols" style="margin-top:.5em; align-items:center">
+      <div>
+        <div class="card" style="margin-bottom:.7em">
+          <h3>What to Take Home</h3>
+          <ul>
+            <li><strong>Decide before you build:</strong> ADRs (<em>Why</em>) + LIMs (<em>Where Not</em>) + Gherkin (<em>What</em>).</li>
+            <li><strong>Audit before you code:</strong> Let the Specification Critic (<span class="kbd">bdd-critic</span>) cross-check all registers in Markdown &amp; Gherkin.</li>
+            <li><strong>Verify through independent channels:</strong> Black-box steps + §13 Step Honesty Audit make implementations replaceable across languages.</li>
+          </ul>
+        </div>
+        <p class="small"><strong>Repository, Slides &amp; Guidelines v1.9.0:</strong><br><span class="kbd">github.com/scaratec/burn-your-code</span></p>
+      </div>
+      <div style="text-align:center">
+        <img src="19_resources.png" alt="QR Code github.com/scaratec/burn-your-code" style="width:240px; height:240px; border-radius:16px; border:4px solid #fff; background:#fff">
+        <p class="tiny" style="margin-top:.4em">Scan for Workshop Repo &amp; BDD Guidelines v1.9.0</p>
+      </div>
+    </div>
+  </section>
+
+</div></div>
+
+<script src="vendor/reveal.js/dist/reveal.js"></script>
+<script src="vendor/reveal.js/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1280,
+    height: 720,
+    margin: 0.06,
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    controls: true,
+    progress: true,
+    plugins: [ RevealNotes ]
+  });
+</script>
+</body>
+</html>
