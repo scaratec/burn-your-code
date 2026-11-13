@@ -14,7 +14,7 @@
 - **Proposed by:** EquiGuard team
 - **Approved by:** EquiGuard team lead
 - **Scope:** `geofence-processor` Cloud Run service.
-- **Related ADRs:** [ADR-0001](0001-example-point-in-polygon-ray-casting.md)
+- **Related ADRs:** [ADR-0001](../adr/0001-example-point-in-polygon-ray-casting.md)
 - **Related Guidelines:** BDD Guidelines §2.3 (variance
   scenarios), §4.3 (independent-channel verification).
 
@@ -48,7 +48,7 @@ type Pasture struct {
 The geofence-processor reads this struct from Firestore on
 startup, caches it, and tests every incoming GPS ping against
 the single `Polygon` via the ray-casting algorithm of
-[ADR-0001](0001-example-point-in-polygon-ray-casting.md).
+[ADR-0001](../adr/0001-example-point-in-polygon-ray-casting.md).
 
 Real pastures are not always single shapes:
 
@@ -200,7 +200,7 @@ trigger.
 ## References
 
 - [ADR-0001 — Point-in-polygon: ray casting over winding
-  number](0001-example-point-in-polygon-ray-casting.md) —
+  number](../adr/0001-example-point-in-polygon-ray-casting.md) —
   the algorithmic decision this LIM bounds in terms of
   data-model expressivity.
 - `bdd/features/point_in_polygon.feature` — the
