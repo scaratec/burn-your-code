@@ -50,13 +50,13 @@ If you fall behind: shorten exercise 2 to 10 minutes and let late teams start ex
 
 ## 3. The exercises
 
-Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean environment: fresh clone, fresh agent home, `--mode auto`. They are agent time only; add reading and typing. Each run used roughly 0.5–2.5 million tokens, most of them cached input — far inside a personal daily quota, but a whole room on one account would not be.
+Durations below are agent time from dry runs with `gemini-3.8-flash-high` on the current material unless noted (fresh clone, fresh agent home), without reading, typing and discussion. Conditions, so you can judge them: exercise 1 ran interactively with `--mode auto` in a folder trusted beforehand (as after PREPARATION.md); exercises 2–4 and the bonus ran non-interactively (`agy -p`, permissions skipped) in an isolated container. All runs were signed in through a Google Cloud project, not a personal account; how far a personal plan's quota goes was not measured. One run used roughly 0.5–2 million tokens, most of them cached input. Raw logs and transcripts are with the author; recorded outputs are in the archive (`recorded/`).
 
 ### Exercise 1 — Decide the fence
 
 - **Start:** `agy --model gemini-3.8-flash-high --mode auto -i "$(cat exercises/ex1-fence-decision/PROMPT.md)"`. Participants who followed PREPARATION.md have already trusted the folder; anyone else gets "Do you trust the contents of this project?" — answer *Yes*, and if `agy` then asks before every file read, `/exit` and restart.
 - **What happens:** the agent reads AGENTS.md and ADR-0001, then asks three questions, one at a time, each with options, recommendation and consequences: inside or outside, numerical tolerance, GPS accuracy now or deferred. After the third answer it writes `governance/adr/0005-*.md`, usually `governance/limitations/0004-*.md`, and updates both indexes.
-- **Measured:** 6 minutes including the three answers (three runs: 5:38, 5:51, and 8:45 for a run that also went through the first-run questions and trusted the folder only in the session).
+- **Measured:** 2:34 including three quick answers in a prepared folder; plan 6–8 minutes for people who read the options. An unprepared run (first-run questions, folder trusted only in the session, about ten file prompts) took 8:45.
 - **Watch for:** participants who answer "outside" — perfectly fine. If they keep their own ADR in exercise 2, their scenarios expect `false` on the fence and the suite is RED on different rows. From exercise 3 on, `make ex3-start` puts **everybody** on the reference decision (*inside*); say so in debrief 2, so nobody thinks their decision was "wrong".
 - **Debrief:** both answers are legitimate if they are recorded. Reveal the reference decision (slide 15, answer key). Point out that the LIM tells the next agent what *not* to "fix".
 
@@ -64,7 +64,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - **Start:** own ADR-0005, or `make ex2-start` for the reference.
 - **What happens:** new rows in Layer 1 of the error path enumeration, then one new scenario outline `@mi1 @boundary` with the vertices and edge midpoints of HomePasture, points half and twice the tolerance beyond the fence, and negative controls 0.1 m beyond and inside it. The agent runs `make test-mi1` and explains the failures.
-- **Measured:** 2–7 minutes in clean runs (2:13, 4:01, 4:24, 6:43); one early run took 9:30. This is the exercise most likely to run long — see the run of show for how to shorten it.
+- **Measured:** 3:49 and 6:08 (6:37 and 4:01–6:43 on the previous version with four rows fewer). This is the exercise most likely to run long — see the run of show for how to shorten it.
 - **Expected result** with the reference decision: **26 passed, 6 failed** (which rows, and why: answer key). The old code is not wrong everywhere — it is *undecided*.
 - **Debrief:** error paths first; the tolerance rows pin the `1e-9` down (half of it must be inside, twice of it outside), the negative controls show the fence is still a fence. Then announce that from now on everybody works on the reference decision.
 
@@ -72,7 +72,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - **Start:** everybody runs `make ex3-start` (own files are backed up; everybody now has the reference decision *inside*), then a **new** agent session with the critic prompt.
 - **What happens:** the critic reads only Markdown and Gherkin and reports a findings table along the six edges of BDD Guidelines §14.3.
-- **Measured:** 3–4 minutes (3:18, 3:37, 3:53). In every dry run the critic found all five defects, usually plus a few medium or low findings.
+- **Measured:** 3:11, 3:08 (after a full sequence of earlier checkpoints, as in the room); 3:18 and 4:36 on the previous version. In every dry run the critic found all five defects, usually plus a few medium or low findings.
 - **Answer key:** slide 19 and `python3 facilitator/solutions.py answers`, which also explains the extra findings that critics regularly report (for example the malformed-envelope rule that LIM-0003 leaves without a scenario). Ask for a show of hands: who found all five? Are other findings real contradictions or matters of taste?
 - **Afterwards:** `make ex3-solution` restores the defect-free specification.
 
@@ -80,7 +80,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - **Start:** everybody runs `make ex4-start` (deletes all application code, `make test-mi1` is RED), then the prompt with the chosen language: `sed 's/LANGUAGE/Go/g'` etc.
 - **What happens:** the agent writes the CLI under `app/` and a `./build.sh`, runs `make test-mi1`, fixes and repeats until the suite is green twice in a row. `make ex4-start` resets `workshop/` completely: anything not part of the workshop (old implementations, notes) is packed into the backup and removed, and the command lists what it removed.
-- **Measured:** 3–7 minutes in Python (2:38, 3:03, 3:25, 4:08; the slowest earlier run 6:27).
+- **Measured:** 2:52 and 3:39 in Python (3:03–4:08 on the previous version). Other languages were not measured.
 - **Expected result:** **32 passed, 0 failed**; `make spec-check` reports `governance/` and `bdd/` unchanged since `ex4-start`. (`git status` is no help here: the checkpoint itself adds the uncommitted ADR-0005 and the boundary scenarios.)
 - **Watch for:** compiled languages need their toolchain on the laptop; if a build fails because the compiler is missing, switch to Python. If someone's agent edited the feature file, that is the teaching moment of the day: the rule says read-only.
 - **Debrief:** show of hands per language. Same specification, different code, the fence rule holds everywhere.
@@ -89,7 +89,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - `make bonus-start` loads the RED state of exercise 2 with a dishonest step file: `make test-mi1` is suddenly GREEN.
 - The auditor should name the lines where the step file computes the result itself and overrides what the CLI returned (details: answer key).
-- **Measured:** under 2.5 minutes; every run rejected the step file. `make bonus-solution` restores the honest steps.
+- **Measured:** 1:45 (1:26 on the previous version); every dry run rejected the step file. `make bonus-solution` restores the honest steps (and backs up the dishonest one first).
 
 ## 4. Troubleshooting
 
