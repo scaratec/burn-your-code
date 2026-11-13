@@ -61,3 +61,4 @@ We implement `geofence-processor` as a stateless HTTP service deployed on **Goog
 
 - Enforced by: [`bdd/mi2_geofence_processor.feature`](../../bdd/mi2_geofence_processor.feature), [`bdd/mi3_geofence_processor_image.feature`](../../bdd/mi3_geofence_processor_image.feature), [`bdd/mi4_cloud_run.feature`](../../bdd/mi4_cloud_run.feature)
 - Error paths: [`bdd/00_error_path_enumeration.md`](../../bdd/00_error_path_enumeration.md)
+- Bounded by: [LIM-0003](../limitations/0003-unknown-zone-unspecified-malformed-envelope-untested.md) (the malformed-envelope rule above has no executable scenario in V1)
