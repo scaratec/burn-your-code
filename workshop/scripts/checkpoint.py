@@ -17,7 +17,7 @@ into .workshop-backup/<time>-<checkpoint>.tar.gz and checks the archive.
   ex4-start        ex2-solution with all application code burned
   ex4-solution     ex2-solution with the reference Python implementation
   bonus-start      ex2-solution (RED) with a dishonest bdd/steps/geofence_steps.py
-  bonus-solution   restores the honest bdd/steps/geofence_steps.py from git HEAD
+  bonus-solution   restores the honest bdd/steps/geofence_steps.py from the published workshop state
 
   spec-check       compares governance/ and bdd/ with the state of the last checkpoint
 """

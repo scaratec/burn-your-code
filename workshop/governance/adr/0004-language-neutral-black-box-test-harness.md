@@ -21,7 +21,8 @@ We implement the BDD test suite in **Python `behave`** (running in `.venv/`) usi
 
 The `Makefile` `build` target supports any implementation language:
 - If a custom `./build.sh` script exists in `workshop/`, `make build` executes `./build.sh`.
-- Otherwise, it auto-detects `go.mod` (Go), `Cargo.toml` (Rust), or executable scripts already placed in `bin/geofence-lib-test` and `bin/geofence-processor` (e.g., Python or Node.js scripts with a shebang and `chmod +x`).
+- Otherwise, it uses executables already placed in `bin/geofence-lib-test` and `bin/geofence-processor` (e.g., Python or Node.js scripts with a shebang and `chmod +x`), and builds the Go reference implementation from `go.mod` for whatever is still missing.
+- Every other language (Rust, Java, TypeScript, …) provides `./build.sh`; this is the route the workshop's exercise 4 prescribes.
 
 ## Consequences
 
