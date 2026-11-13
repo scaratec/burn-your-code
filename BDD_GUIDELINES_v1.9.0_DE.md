@@ -1,6 +1,6 @@
 # AI-Driven Behavior Driven Development: Praktische Richtlinien fuer spezifikationsgetriebene Software-Entwicklung
 
-**Version: 1.7.0**
+**Version: 1.9.0**
 
 ## Praeambel
 
@@ -193,6 +193,20 @@ Wo sinnvoll, sollten echte oder realistische Artefakte verwendet werden:
 
 Das senkt das Risiko, dass nur eine kuenstliche Testwelt optimiert wird.
 
+### 3.4 Konfigurationsdaten verifizieren
+
+Wenn ein Szenario Konfigurationsdaten referenziert (Firmenadressen, Steuernummern, Bankverbindungen, API-Schluessel), muessen diese gegen die reale Quelle geprueft sein. Konfigurationsdaten aus bestehendem Code zu uebernehmen ist kein Beleg fuer deren Korrektheit.
+
+Typische Fehlerquelle: Ein frueherer Entwickler hat Platzhalter eingesetzt ("DE123456789", "Musterstr. 1"), die spaeter unreflektiert in Konfigurationsdateien und Feature-Files uebernommen werden.
+
+Empfehlung:
+
+- Firmendaten gegen das Impressum oder Handelsregister pruefen.
+- Steuernummern und USt-IdNr. gegen offizielle Quellen verifizieren.
+- Bankverbindungen nicht aus Testcode uebernehmen, sondern aus der Buchhaltung.
+
+Die Verantwortung liegt nicht beim Feature-File, sondern beim Prozess, der das Feature-File mit Daten befuellt.
+
 ## 4. Testdesign
 
 ### 4.1 Das Verbot des Zirkelschlusses
@@ -244,6 +258,128 @@ Stattdessen gilt:
 - nachvollziehbare Fehlermeldungen,
 - keine endlosen Sleeps ohne Begruendung,
 - keine Flakiness als akzeptierter Normalzustand.
+
+### 4.5 Systematische Ermittlung von Fehlerpfaden
+
+Abschnitt 4.2 benennt, welche Kategorien von Fehlerpfaden abzudecken sind. Dieser Abschnitt beschreibt, wie die vollstaendige Menge der Fehlerpfade fuer ein gegebenes System methodisch ermittelt wird.
+
+#### Das Prinzip: Quantifizierung vor Spezifikation
+
+Bevor einzelne Fehlerszenarien beschrieben werden, muss die Gesamtzahl der moeglichen Fehlerpfade ermittelt werden. Die Frage lautet nicht "welche Fehler fallen uns ein?", sondern "wie viele Fehlerpfade existieren in diesem System?".
+
+Der Unterschied ist wesentlich:
+
+- "Welche Fehler fallen uns ein?" erzeugt eine unvollstaendige, durch Erfahrung und Aufmerksamkeit begrenzte Liste.
+- "Wie viele gibt es?" erzwingt eine systematische Zerlegung des Systems und macht Luecken sichtbar.
+
+Die Zahl muss nicht exakt sein. Sie muss begruendbar sein. Wenn die Herleitung nachvollziehbar ist, deckt sie mit hoher Wahrscheinlichkeit alle relevanten Faelle ab.
+
+#### Die Methode: Schichtenweise Enumeration
+
+Das System wird entlang seiner Verarbeitungskette in Schichten zerlegt. Fuer jede Schicht werden die moeglichen Fehlerquellen enumeriert. Die Summe ueber alle Schichten ergibt die Gesamtzahl.
+
+**Schritt 1: Schichten identifizieren.**
+
+Jedes System, das Eingaben entgegennimmt, extern kommuniziert und Ergebnisse liefert, hat mindestens diese Schichten:
+
+| Schicht | Fehlerquelle | Typische Frage |
+|---|---|---|
+| Eingabevalidierung | Fehlende, leere, falsch formatierte, typfremde, doppelte Werte | Was kann der Aufrufer falsch uebergeben? |
+| Externe Kommunikation | Netzwerk, HTTP-Status, Timeouts, DNS, TLS | Was kann zwischen System und Gegenstelle schiefgehen? |
+| Antwortverarbeitung | Format, Schema, unerwartete Inhalte, fehlende Felder | Was kann die Gegenstelle zurueckliefern, das nicht dem erwarteten Format entspricht? |
+| Datenintegritaet | Wertebereiche, fachliche Konsistenz, degenerierte Strukturen | Was kann an den empfangenen Daten inhaltlich falsch sein? |
+| Protokoll / Schnittstelle | Unbekannte Methoden, falsche Nachrichtenformate | Was kann auf der Transportebene schiefgehen? |
+
+Nicht jedes System hat alle Schichten. Ein reiner Algorithmus ohne externe Abhaengigkeiten hat nur Eingabevalidierung und Datenintegritaet. Ein API-Gateway hat alle fuenf.
+
+**Schritt 2: Pro Schicht enumerieren.**
+
+Fuer jede identifizierte Schicht werden die konkreten Fehlerfaelle aufgelistet. Dabei gilt:
+
+- Jeder Fehlerfall muss eine eigene, unterscheidbare Ursache haben.
+- Varianten derselben Ursache (z.B. HTTP 400 vs. HTTP 403 vs. HTTP 500) zaehlen einzeln, wenn das System unterschiedlich reagieren muss.
+- Varianten, auf die das System identisch reagiert, koennen zusammengefasst werden.
+
+Beispiel fuer die Schicht "Eingabevalidierung" eines Systems mit vier Pflichtfeldern:
+
+- 4 Felder × "fehlt" = 4 Fehlerfaelle
+- 4 Felder × "leer" = 4 Fehlerfaelle (falls "leer" anders behandelt wird als "fehlt")
+- 2 Felder × "falsches Format" = 2 Fehlerfaelle
+- 1 Sonderfall "Duplikate" = 1 Fehlerfall
+- 1 Strukturfehler "falscher Typ" = 1 Fehlerfall
+- Summe Schicht: 12 Fehlerfaelle
+
+**Schritt 3: Summieren und tabellarisch darstellen.**
+
+Die Schichten und ihre Fehlerzahlen werden in einer Uebersichtstabelle zusammengefasst:
+
+```text
+| Schicht                | Anzahl | Bereits abgedeckt |
+|------------------------|--------|-------------------|
+| Eingabevalidierung     | 12     | 4                 |
+| Externe Kommunikation  | 8      | 1                 |
+| Antwortverarbeitung    | 5      | 0                 |
+| Datenintegritaet       | 4      | 0                 |
+| Protokoll              | 3      | 1                 |
+| Gesamt                 | 32     | 6                 |
+| Neue Szenarien         | 26     |                   |
+```
+
+Die Spalte "Bereits abgedeckt" verhindert Doppelarbeit, wenn Fehlerpfade schon in anderen Feature-Files spezifiziert sind.
+
+**Schritt 4: Szenarien ableiten.**
+
+Erst nach der Quantifizierung werden die einzelnen Szenarien geschrieben. Fuer Fehlerfaelle mit gleichem Muster aber unterschiedlichen Eingaben bieten sich `Scenario Outline` an (Guideline 2.3). Fuer Fehlerfaelle mit unterschiedlichem Verhalten werden separate Szenarien angelegt.
+
+#### Abgrenzung
+
+Die schichtenweise Enumeration ersetzt nicht die fachliche Bewertung. Nicht jeder ermittelte Fehlerpfad muss zwingend ein eigenes Szenario erhalten. Manche Fehlerfaelle (z.B. DNS-Aufloesung, TLS-Zertifikatsfehler) sind rein operativ und haben keine fachliche Auswirkung. Die Entscheidung, welche Fehlerpfade als Szenarien spezifiziert werden, liegt beim Menschen.
+
+Der Wert der Methode liegt nicht in der Zahl selbst, sondern darin, dass die Zahl eine vollstaendige Analyse erzwingt. Wer 32 Fehlerpfade identifiziert und bewusst entscheidet, 26 davon zu spezifizieren, hat eine nachvollziehbare Abdeckung. Wer "die wichtigsten Fehlerfaelle" auflistet, hat eine Hoffnung.
+
+### 4.6 Domaenensignale in Feature-Files erkennen
+
+BDD-Szenarien spezifizieren Verhalten. Aber die Struktur der Szenarien kann Hinweise auf Schwaechen im Domaenenmodell liefern, die ueber das Testdesign hinausgehen.
+
+Diese Richtlinie beschreibt keine Architekturvorgaben. Sie beschreibt Muster, die beim Schreiben von Szenarien sichtbar werden und die als Signal an die Architekturarbeit weitergegeben werden sollten.
+
+#### Signal 1: Enum-gebundene Szenarien
+
+Wenn ein Szenario nur mit einem festen Satz von Enum-Werten funktioniert und neue fachliche Varianten eine Code-Aenderung erfordern wuerden, ist das ein Hinweis darauf, dass das Domaenenmodell zu starr ist.
+
+Beispiel:
+
+```gherkin
+Given ein Vertrag mit MwSt "MWST_19"
+```
+
+Wenn das System nur `MWST_19`, `MWST_16` und `KEINE_MWST` kennt und ein neuer Satz (z.B. 7% fuer bestimmte Leistungen) ein Deployment erfordert, ist die Fachlichkeit nicht im Feature-File, sondern im Typsystem gefangen.
+
+Das Feature-File kann dieses Problem nicht loesen. Aber es macht es sichtbar. Wenn die Ableitungsregel "der MwSt-Satz ergibt sich aus Kategorie, Land und Datum" lautet, das Szenario aber einen konkreten Enum-Wert erzwingt, fehlt dem Domaenenmodell eine Indirektion.
+
+#### Signal 2: Zeitabhaengige Fachregeln ohne Zeitmodell
+
+Wenn Szenarien Geschaeftsregeln testen, die sich ueber die Zeit aendern koennen (Steuersaetze, Gebuehren, Grenzwerte, Vertragsbedingungen), aber das System keinen Mechanismus hat, diese Aenderungen ohne Code-Deployment abzubilden, ist das ein Signal.
+
+Ein Feature-File, das den Satz `0.19` als Eingabe und `0.19` als erwartete Ausgabe enthaelt, testet korrekt — aber es testet nur den Zustand zum Zeitpunkt der Erstellung. Die Frage "was passiert, wenn sich der Satz am 1. Juli aendert?" wird durch das Szenario nicht beantwortet und durch die Implementierung moeglicherweise nicht unterstuetzt.
+
+#### Signal 3: Abrechnungszeitraeume ohne explizites Domaenenobjekt
+
+Wenn ein Szenario einen Zeitraum (z.B. "Januar bis Maerz") als Eingabe verwendet und die Implementierung diesen Zeitraum intern berechnet, ohne dass er als eigenstaendiges Konzept existiert, koennen Randfaelle unsichtbar bleiben.
+
+Typische Randfaelle:
+
+- Der Zeitraum ueberspannt eine Regelaenderung (z.B. Steuersatzwechsel am Monatsersten).
+- Der Zeitraum endet vor dem Vertragsende, aber das Intervall ist groesser als der Restzeitraum.
+- Derselbe Zeitraum wurde bereits teilweise abgerechnet.
+
+Wenn das Szenario "Abrechnung fuer Q3" schreibt und das System intern "3 Monate × Preis" rechnet, ist der Zeitraum implizit. Erst ein explizites Domaenenobjekt (z.B. `BillingPeriod` mit `Segments`) macht die Randfaelle testbar und die Berechnungslogik transparent.
+
+#### Abgrenzung
+
+Diese Signale sind keine Fehler im Feature-File. Sie sind Beobachtungen, die das Feature-File moeglich macht. Ein Szenario, das `MWST_19` verwendet, ist nicht falsch. Aber wenn die Frage "was passiert bei einem anderen Satz?" nicht ohne Code-Aenderung beantwortbar ist, liegt die Schwaeche nicht im Test, sondern im Modell.
+
+BDD kann diese Schwaechen sichtbar machen. Beheben muss sie die Architekturarbeit.
 
 ## 5. Step-Implementierungen
 
@@ -570,6 +706,52 @@ Zwei Regeln fuer den Audit-Agent:
 Ein Spec-Audit ersetzt weder Code-Reviews noch manuelle Tests. Es ist ein strukturierter Pruefschritt, der gezielt die drei haeufigsten Ehrlichkeitsluecken in LLM-generiertem Step-Code adressiert.
 
 Nicht jedes Finding erfordert eine Korrektur. Manche Szenarien testen bewusst nur den Statuscode (etwa fuer reine Validierungs-Ablehnungen). Manche Given-Steps muessen zwangslaeufig Testdaten erzeugen, die nicht im Szenario stehen. Die Entscheidung ueber die Relevanz eines Findings liegt beim Menschen.
+
+## 14. Spezifikations-Kritik vor dem ersten Code (Der Kritiker-Agent)
+
+### 14.1 Warum erst die Gesamtspezifikation pruefbar ist
+
+Abschnitt 13 prueft, ob der Step-Code die Szenarien ehrlich verifiziert. Doch selbst ehrliche Steps helfen nicht, wenn die Spezifikation selbst widerspruechlich oder lueckenhaft ist:
+
+- Eine Regel steht in einer Architekturentscheidung (ADR), aber kein Szenario erzwingt sie.
+- Zwei Dokumente nennen unterschiedliche Grenzwerte, Feldnamen oder Fehlercodes fuer dieselbe Sache.
+- Eine bewusste Abkuerzung ist weder als Szenario noch als Limitation Record (LIM) dokumentiert.
+- Ein `Then`-Schritt ist so formuliert, dass er logisch gar nicht scheitern kann.
+
+Im Quellcode sind solche Widersprueche unsichtbar, weil Architekturentscheidungen und ihre Gruende dort nicht vorkommen und Erwartungen sich ueber Fixtures, Hilfsfunktionen und Assertions verteilen. Liegen dagegen **ADRs** (*Warum ist es so gebaut?*), **Limitation Records** (*Wo fallen wir bewusst zurueck?*), **Fehlerpfad-Enumerationen** (§4.5) und **Feature-Files** (*Was tut das System?*) gemeinsam in Markdown und Gherkin vor, passt die gesamte Spezifikation eines Dienstes in ein einziges Kontextfenster — ohne eine Zeile Setup- oder Produktivcode dazwischen.
+
+### 14.2 Die sechs Stufen der Entwicklung
+
+Damit ein KI-Agent einen Dienst vollkommen autonom und in jeder beliebigen Zielsprache implementieren kann, ist die Reihenfolge der Artefakte verbindlich:
+
+1. **Architekturentscheidung (`governance/adr/`)** — *WARUM*: Gefuehrter Dialog (eine Frage pro Schritt, mit Optionen, Empfehlung und Konsequenzen; die Programmiersprache wird als Letztes gefragt).
+2. **Grenzen & Verzicht (`governance/limitations/`)** — *WO NICHT*: Bewusste, zeitlich oder fachlich begrenzte Abkuerzungen gegenueber einem ADR oder Feature-File. Was hier nicht steht, ist keine Grenze, sondern ein Fehler.
+3. **Fehlerpfade & Feature-Files (`bdd/features/`)** — *ROT*: Erst Fehlerpfade schichtweise zaehlen (§4.5), dann Gherkin-Szenarien mit Positiv- und Gegenprobe formulieren.
+4. **Spezifikations-Kritiker (`bdd-critic`)** — *GEPRUEFT*: Ein unabhaengiger Agent liest Stufen 1–3 als Ganzes gegen, **bevor** Step-Code oder Anwendungscode geschrieben wird.
+5. **Pruefschritte & Step-Review (`bdd/steps/`)** — *NOCH ROT*: Sprachneutrale Black-Box-Steps implementieren und per Spec-Audit (§13) auf Testehrlichkeit pruefen.
+6. **Anwendungscode (`src/`, `cmd/`, …)** — *GRUEN*: Autonome Implementierung gegen die schreibgeschuetzte Spezifikation, bis alle Szenarien gruen sind.
+
+**Die Rueckschleifen-Regel:** Was der Kritiker (Stufe 4), das Step-Review (Stufe 5) oder der Kontakt mit der Realitaet (Stufe 6) findet, aendert **zuerst** den ADR, den Limitation Record oder das Feature-File — niemals direkt den Produktivcode. Ein Befund im Code-Review kostet einen Fix und ist beim naechsten Neubau wieder offen; ein Befund im Spezifikations-Review wird ein Szenario und bleibt dauerhaft erledigt.
+
+### 14.3 Die sechs Pruefkanten des Kritiker-Agenten
+
+Der Kritiker-Agent liest **ausschliesslich Markdown und Gherkin** — er oeffnet niemals Produktivcode, Step-Code oder Infrastruktur-Skripte. Er prueft systematisch sechs Kanten:
+
+1. **Verbindliche Menge:** Welche ADRs gelten aktuell (`Accepted`), welche sind abgeloest (`Superseded`), und stimmen Index, Verweise und Szenarien darueber ueberein?
+2. **Record gegen Record:** Nennen zwei ADRs oder LIMs unterschiedliche Werte, Regeln oder Begriffe fuer denselben Sachverhalt?
+3. **Feature gegen Feature:** Fuehrt dieselbe Eingabe in zwei Feature-Files zu widerspruechlichen Erwartungen oder abweichendem Vokabular?
+4. **Spezifikation gegen Entscheidungen (Kreuzpruefung):**
+   - *ADR → Feature-File:* Hat jede beschlossene Regel ein Szenario, das sie erzwingt? (Eine Regel ohne Szenario ist nur eine Absicht.)
+   - *Feature-File → ADR:* Beruft sich jedes Szenario auf eine getroffene Entscheidung?
+   - *Fehlerpfad-Enumeration → Feature-File:* Ist jede Zeile der Aufzaehlung (§4.5) durch ein Szenario abgedeckt oder begruendet ausgeschlossen?
+5. **Limitation Record gegen beide:** Ist jede bekannte Luecke zwischen ADR und Feature-File als LIM dokumentiert?
+6. **Die Szenarien selbst:** Gibt es `Then`-Schritte, die nicht scheitern koennen, Grenzwerte ohne Testpunkt auf beiden Seiten, fehlende Gegenproben (§4.2) oder Werte ohne erkennbare Herkunft (§2.2)?
+
+### 14.4 Durchfuehrung und Rollentrennung
+
+- **Zwei Modi:** Der Kritiker laeuft *pro Aenderung* (vor jedem Rot-Schritt fuer den betroffenen Bereich und seine Nachbarn) sowie als *Gesamtbild-Review* (vor Meilensteinen ueber alle ADRs, LIMs, Fehlerpfade und Feature-Files hinweg).
+- **Befundformat:** Jeder Befund nennt Schweregrad (`blocking`, `high`, `medium`, `low`), **beide Fundstellen** (Datei und Zeile), die konkrete Folge (wie ein fehlerhafter Dienst den Test trotzdem besteht) und einen Korrekturvorschlag in Markdown oder Gherkin.
+- **Keine Selbstfreigabe:** Der Kritiker aendert keine Spezifikationsdateien eigenmaechtig und trifft keine Architekturentscheidungen. Wie bei ADRs und LIMs entscheidet der Mensch.
 
 ## Schlusswort
 

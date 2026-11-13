@@ -1,7 +1,7 @@
 # Governance: ADR + LIM + BDD as a triad
 
 This directory documents the **decision-and-debt governance**
-that complements the [BDD Guidelines](../BDD_GUIDELINES_v1.8.0_EN.md).
+that complements the [BDD Guidelines](../BDD_GUIDELINES_v1.9.0_EN.md).
 
 The Guidelines answer the question *"how do we write executable
 specifications that are tight enough to drive both humans and AI
@@ -60,6 +60,13 @@ The three are mutually referential. An ADR may cite a Guidelines
 section that motivates it. A LIM names the ADR or Guidelines
 section it bounds. A BDD scenario can land a `# LIM-NNNN` comment
 above an explicitly skipped or under-asserted step.
+
+Because all three registers are written in human-readable Markdown and Gherkin, an independent **Specification Critic (`bdd-critic`, see BDD Guidelines §14)** can audit the entire triad together in a single context window *before* any step code or application code exists:
+
+- **ADR → Feature File:** Every decided rule has a scenario that enforces it.
+- **Feature File → ADR:** Every scenario traces back to a documented decision.
+- **LIM → Both:** Every deliberate gap between an ADR and a Feature File is recorded as a LIM; anything undocumented is a bug.
+- **Error Path Enumeration (§4.5) → Feature File:** Every enumerated error path is covered by a scenario or explicitly excluded with a stated reason.
 
 ## Why bother — the AI-driven angle
 
