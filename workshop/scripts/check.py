@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Self-test before the workshop (`make check`). Prints one line per check and exits 1 on any failure."""
 import argparse
+import json
+import os
 import re
 import shutil
 import subprocess
@@ -24,6 +26,20 @@ def run(cmd, timeout=120):
         return p.returncode, p.stdout + p.stderr
     except (OSError, subprocess.TimeoutExpired) as exc:
         return 1, str(exc)
+
+
+def folder_trusted():
+    settings = Path.home() / ".gemini" / "antigravity-cli" / "settings.json"
+    try:
+        trusted = json.loads(settings.read_text()).get("trustedWorkspaces", [])
+    except (OSError, ValueError):
+        return False
+    here = Path(os.path.realpath(ROOT))
+    for entry in trusted:
+        base = Path(os.path.realpath(os.path.expanduser(entry)))
+        if here == base or base in here.parents:
+            return True
+    return False
 
 
 def main():
@@ -50,6 +66,8 @@ def main():
         if logged_in:
             report(re.search(rf"^{re.escape(args.model)}\b", out, re.M) is not None,
                    f"model {args.model} available", "check your Antigravity plan and run 'agy models'")
+        report(folder_trusted(), "this folder is trusted by the Antigravity CLI",
+               "run 'agy' in this folder, answer 'Yes, I trust this folder', then /exit")
 
     code, out = run([str(ROOT / ".venv" / "bin" / "behave"), "bdd/", "--tags=@mi1", "--format=progress",
                      "--no-color"])

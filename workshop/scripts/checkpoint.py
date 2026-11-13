@@ -58,7 +58,10 @@ def backup(label):
 
 
 def git(*args):
-    subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True)
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    if result.returncode != 0:
+        sys.exit(f"[workshop] git {' '.join(args)} failed:\n{result.stderr.strip()}\n"
+                 "[workshop] Nothing was deleted. Your previous files are also in .workshop-backup/.")
 
 
 def remove(name):
@@ -100,16 +103,18 @@ def drop_line(rel, needle):
 
 
 def reference_spec():
-    for name in SPEC:
-        remove(name)
+    # Restore tracked files first and only then drop untracked ones: if git fails,
+    # nothing has been deleted.
     git("checkout", "HEAD", "--", *SPEC)
+    git("clean", "-fdq", "--", *SPEC)
 
 
 def baseline_app():
-    for name in APP:
-        remove(name)
-    remove(".burned")
     git("checkout", "HEAD", "--", *GIT_APP)
+    for name in APP:
+        if name not in GIT_APP:
+            remove(name)
+    remove(".burned")
     (ROOT / "bin").mkdir()
     install("baseline/geofence-lib-test", ROOT / "bin" / "geofence-lib-test", executable=True)
 

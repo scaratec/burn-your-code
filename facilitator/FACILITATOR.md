@@ -51,7 +51,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 ### Exercise 1 — Decide the fence
 
-- **Start:** `agy --model gemini-3.8-flash-high --mode auto -i "$(cat exercises/ex1-fence-decision/PROMPT.md)"`. On the first start in the folder, `agy` asks "Do you trust the contents of this project?" — answer *Yes*.
+- **Start:** `agy --model gemini-3.8-flash-high --mode auto -i "$(cat exercises/ex1-fence-decision/PROMPT.md)"`. Participants who followed PREPARATION.md have already trusted the folder; anyone else gets "Do you trust the contents of this project?" — answer *Yes*, and if `agy` then asks before every file read, `/exit` and restart.
 - **What happens:** the agent reads AGENTS.md and ADR-0001, then asks three questions, one at a time, each with options, recommendation and consequences: inside or outside, numerical tolerance, GPS accuracy now or deferred. After the third answer it writes `governance/adr/0005-*.md`, usually `governance/limitations/0004-*.md`, and updates both indexes.
 - **Measured:** about 6 minutes including the three answers.
 - **Watch for:** participants who answer "outside" — perfectly fine, but their exercise 2 then expects `false` on the fence. Exercise 4 starts from the reference for everybody.
@@ -92,6 +92,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 | Symptom | Fix |
 |---|---|
+| `agy` asks before reading every single file | The folder was trusted only in this session (PREPARATION step 3 skipped). `/exit` and start the exercise command again. |
 | `agy` asks for permission before every edit or command | Auto mode is not available for this account (business/enterprise) or OS; answer `y`, or press Shift+Tab to switch to `accept-edits`. |
 | `agy` says the quota is exhausted | Pair the participant with a neighbour, or use the checkpoint: `make exN-solution`. |
 | Sign-in on a remote machine/WSL opens no browser | `agy` prints a URL; open it on the laptop and paste the code back. |
