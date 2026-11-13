@@ -23,6 +23,7 @@ into .workshop-backup/<time>-<checkpoint>.tar.gz and checks the archive.
 """
 import datetime
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -39,6 +40,7 @@ import solutions  # noqa: E402
 
 BACKUP = ROOT / ".workshop-backup"
 MANIFEST = ROOT / ".workshop-spec.json"
+STAGED = ".staged"
 SPEC = ["governance", "bdd"]
 GIT_APP = ["cmd", "internal", "go.mod", "go.sum", "Dockerfile"]
 APP_OUTPUTS = ["app", "src", "build.sh", "bin", ".burned"] + GIT_APP
@@ -74,14 +76,25 @@ _REF = None
 
 
 def reference():
-    """The published state checkpoints restore: the fork point from the upstream branch, else HEAD.
+    """The published workshop state that checkpoints restore.
 
-    Participants who commit their own work keep it in git; checkpoints still restore the workshop material.
+    It is the fork point of HEAD from the published branch: the upstream of the current
+    branch if it has one, otherwise origin's default branch. Own commits, on main or on
+    a local branch, stay in git, but checkpoints always restore the published material.
     """
     global _REF
     if _REF is None:
-        up = subprocess.run(["git", "merge-base", "HEAD", "@{upstream}"], cwd=ROOT, capture_output=True, text=True)
-        _REF = up.stdout.strip() if up.returncode == 0 and up.stdout.strip() else git("rev-parse", "HEAD")
+        for published in ("@{upstream}", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"):
+            base = subprocess.run(["git", "merge-base", "HEAD", published], cwd=ROOT, capture_output=True, text=True)
+            if base.returncode == 0 and base.stdout.strip():
+                _REF = base.stdout.strip()
+                break
+        else:
+            fail("cannot find the published workshop state: this clone has no upstream branch and no "
+                 "'origin'.\n[workshop] Clone the repository with 'git clone' (see PREPARATION.md), or run "
+                 "'git branch --set-upstream-to=<remote>/main' once.")
+        if _REF != git("rev-parse", "HEAD"):
+            say(f"Restoring the published workshop material ({_REF[:8]}); your own commits stay in git.")
     return _REF
 
 
@@ -120,6 +133,19 @@ def changed_files():
             if os.path.lexists(ROOT / p)}
 
 
+def staged_versions():
+    """Index versions (git add) that differ from the file on disk: the reset would discard them otherwise."""
+    versions = {}
+    staged = set(git_z("diff", "-z", "--cached", "--name-only", "--relative", "--diff-filter=d"))  # index vs. HEAD
+    for f in git_z("diff", "-z", "--name-only", "--relative"):  # index vs. working tree
+        if f not in staged or f in versions:
+            continue
+        blob = subprocess.run(["git", "cat-file", "blob", f":./{f}"], cwd=ROOT, capture_output=True)
+        if blob.returncode == 0:
+            versions[f] = blob.stdout
+    return versions
+
+
 def backup(label):
     files = changed_files() | extra_files()
     files |= {f for f in disk_files() if f.split("/", 1)[0] in SPEC}
@@ -133,15 +159,23 @@ def backup(label):
     while target.exists():
         target = BACKUP / f"{stamp}-{label}-{n}.tar.gz"
         n += 1
+    staged = staged_versions()
     with tarfile.open(target, "x:gz") as tar:
         for f in files:
             tar.add(ROOT / f, arcname=f, recursive=False)
+        for f, data in staged.items():
+            info = tarfile.TarInfo(f"{STAGED}/{f}")
+            info.size, info.mtime = len(data), int(datetime.datetime.now().timestamp())
+            tar.addfile(info, io.BytesIO(data))
+    expected = sorted(files + [f"{STAGED}/{f}" for f in staged])
     with tarfile.open(target, "r:gz") as tar:
-        if sorted(tar.getnames()) != files:
+        if sorted(tar.getnames()) != expected:
             fail(f"the backup {target.name} is incomplete; stopping before anything is changed.")
     rel = target.relative_to(ROOT)
     say(f"Backed up your files to {rel}")
     say(f"  list: tar -tzf {rel}   restore a file: tar -xzf {rel} <path>")
+    if staged:
+        say(f"  staged versions (git add) that differ from your files are under {STAGED}/ in the archive")
 
 
 def remove(name):
@@ -290,7 +324,7 @@ def bonus_start():
 
 
 def bonus_solution():
-    git("checkout", "HEAD", "--", "bdd/steps/geofence_steps.py")
+    git("checkout", reference(), "--", "bdd/steps/geofence_steps.py")
 
 
 STATES = {

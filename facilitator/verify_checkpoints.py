@@ -140,6 +140,40 @@ def mistakes(ws):
           not (ws / "governance" / "adr" / "0005-participant-outside.md").exists()
           and in_backup(ws, "governance/adr/0005-participant-outside.md", "outside"))
 
+    # Staged and working-tree versions of the same file differ: both must be in the backup.
+    with open(ws / "README.md", "a") as f:
+        f.write("version A staged\n")
+    git("add", "README.md")
+    (ws / "README.md").write_text((ws / "README.md").read_text().replace("version A staged", "version B on disk"))
+    make("workshop-start")
+    check("distinct staged and working-tree versions both backed up",
+          in_backup(ws, "README.md", "version B on disk") and in_backup(ws, ".staged/README.md", "version A staged"))
+
+    # A committed dishonest step file must not come back from bonus-solution.
+    make("bonus-start")
+    git("add", "bdd/steps/geofence_steps.py")
+    git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "save bonus state")
+    make("bonus-solution")
+    test = run(["make", "-s", "test-mi1"], ws)
+    check("bonus-solution restores honest steps after a commit", "26 scenarios passed, 6 failed" in test.stdout + test.stderr)
+    git("reset", "-q", "--hard", "HEAD~1")
+
+    # Own commits on a local branch without upstream: checkpoints still restore the published material.
+    git("switch", "-q", "-c", "my-work")
+    make("ex2-solution")
+    (ws / "governance" / "adr" / "0005-participant-outside.md").write_text("# outside\n")
+    git("add", "-A", ".")
+    git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "my exercise work")
+    make("workshop-start")
+    test = run(["make", "-s", "test-mi1"], ws)
+    check("local branch without upstream: workshop-start gives the starting point",
+          "16 scenarios passed, 0 failed" in test.stdout + test.stderr)
+    make("ex3-start")
+    adrs = sorted(p.name for p in (ws / "governance" / "adr").glob("0005-*.md"))
+    check("local branch without upstream: ex3-start keeps only the reference ADR",
+          adrs == ["0005-points-on-the-fence-count-as-inside.md"])
+    git("switch", "-q", "-")
+
     # Own commits stay in git, but checkpoints restore the published material.
     (ws / "governance" / "adr" / "0099-own.md").write_text("# own\n")
     git("add", "governance/adr/0099-own.md")
