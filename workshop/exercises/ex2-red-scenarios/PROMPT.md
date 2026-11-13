@@ -14,3 +14,5 @@ Turn ADR-0005 (points on the fence) into an executable specification, in this or
 3. Do NOT change existing scenarios, step definitions or any application code. Every value must be visible in the Gherkin text.
 
 4. Run `make test-mi1`. The new scenarios must fail (RED) because the current implementation knows nothing about the fence; the 16 existing scenarios must still pass. Report which rows fail and why, in at most five lines.
+
+5. Follow AGENTS.md section 4: do not use reference solutions, checkpoints or git history.

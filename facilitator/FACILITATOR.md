@@ -20,7 +20,8 @@ Everything you need to run the workshop without its author. Participants work in
 - [ ] Projector at 1920 × 1080 (16:9); open `facilitator/slides/index.html` in Chrome or Firefox, press `F` for full screen, `S` for the speaker view with notes.
 - [ ] Play the video on slide 9 once (no sound is needed).
 - [ ] `deck.pdf` on a USB stick as a fallback.
-- [ ] Your own clone: `make check` is green and `agy` is signed in — you demo any exercise that a participant cannot run.
+- [ ] Your own clone with **Git LFS** installed (`git lfs install` before cloning, or `git lfs pull` afterwards) — the video, the PDF and the images are LFS files.
+- [ ] `make check` is green and `agy` is signed in — you demo any exercise that a participant cannot run.
 - [ ] Power strips; the Wi-Fi password on a slide or flip chart.
 - [ ] Optional: pair people up — one laptop with a working `agy` per pair is enough.
 

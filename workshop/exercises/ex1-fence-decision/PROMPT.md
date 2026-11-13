@@ -12,3 +12,4 @@ After my third answer:
 - If we deferred something, write governance/limitations/0004-<short-slug>.md (LIM-0004) from the template.
 - Add the new records to both README index tables.
 - Do not change feature files, step definitions or any code.
+- Follow AGENTS.md section 4: do not use reference solutions, checkpoints or git history.

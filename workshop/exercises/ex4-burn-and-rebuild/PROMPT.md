@@ -13,5 +13,6 @@ Rules:
 - Do not modify anything under governance/ or bdd/. If you believe a scenario is wrong, leave it and report it at the end.
 - Ask no questions; every decision is already in the ADRs and the feature file.
 - Use only the standard library of LANGUAGE (ADR-0001: no geometry libraries).
+- Follow AGENTS.md section 4: do not use reference solutions, checkpoints or git history.
 
 You are done only when `make test-mi1` passes twice in a row with 0 failed scenarios. At the end, print the numbers: scenarios passed / failed, and the lines of code you wrote.

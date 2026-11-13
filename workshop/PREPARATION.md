@@ -60,5 +60,6 @@ All checks passed. You are ready for the workshop.
 | `this folder is trusted` fails | Run `agy` in `burn-your-code/workshop`, answer "Yes, I trust this folder", then `/exit`. |
 | `model gemini-3.8-flash-high` missing | Run `agy models` and check your plan; tell the facilitator which models you see. |
 | `MI1 test suite green` fails | Run `make workshop-start`, then `make check` again. |
+| A checkpoint fails with "configured for Git LFS but 'git-lfs' was not found" | Install Git LFS (<https://git-lfs.com>), or delete `.git/hooks/post-checkout`. The exercises themselves do not need it. |
 
 The exercises use a few minutes of model time each. If your daily quota runs out during the workshop, every exercise has a `make exN-solution` checkpoint so you can keep going.

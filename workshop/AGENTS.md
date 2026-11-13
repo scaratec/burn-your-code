@@ -103,7 +103,19 @@ When implementing the application in Phase 5:
 
 ---
 
-## 4. Quick Reference — What the Agent Refuses to Do
+## 4. Workshop Exercises: Do Your Own Work
+
+This repository is also used for a hands-on workshop. The reference solutions and the checkpoint machinery exist for the **humans in the room**, not for agents:
+
+- Never read, extract, import or execute anything under `../facilitator/` (including `solutions.tar.gz` and `solutions.py`) or `scripts/checkpoint.py`.
+- Never run the make targets `workshop-start`, `ex*-start`, `ex*-solution`, `bonus-start` or `bonus-solution` yourself.
+- Never use git history (`git show`, `git log -p`, `git diff` against other commits) to look for solutions.
+
+Produce your result from the specification and the task you were given. If you cannot, say so instead of looking for an answer key.
+
+---
+
+## 5. Quick Reference — What the Agent Refuses to Do
 
 | Never | Instead |
 |---|---|
@@ -114,3 +126,4 @@ When implementing the application in Phase 5:
 | Assert a write by checking only the HTTP 200/204 response | Verify the written document through the independent Firestore channel |
 | Couple `.feature` or `_steps.py` files to a specific implementation language | Use the language-neutral black-box CLI/HTTP/OCI contracts |
 | Modify a `.feature` file during Stage 6 to make a failing test pass | Fix the application code to satisfy the specification |
+| Look up reference solutions, checkpoints or git history during a workshop exercise | Do the work from the specification (section 4) |
