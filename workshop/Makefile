@@ -28,7 +28,7 @@ CHECKPOINT     := .venv/bin/python3 scripts/checkpoint.py
         start-emulators stop-emulators \
         test-mi1 test-mi2 test-mi3 test-mi4 test-all \
         workshop-start ex1-start ex1-solution ex2-start ex2-solution \
-        ex3-start ex3-solution ex4-start ex4-solution bonus-start bonus-solution \
+        ex3-start ex3-solution ex4-start ex4-solution bonus-start bonus-solution spec-check \
         phase1-start checkpoint-adrs checkpoint-features checkpoint-steps burn restore-all \
         auth-registry push-image tf-init tf-apply teardown-mi4 clean
 
@@ -48,6 +48,7 @@ help:
 	@echo "  exN-start            Jump to the start of exercise N (1-4); exN-solution loads its reference solution"
 	@echo "  bonus-start          Bonus: install a dishonest step file for the step honesty audit"
 	@echo "  bonus-solution       Bonus: restore the honest step file"
+	@echo "  spec-check           Show whether governance/ and bdd/ changed since the last checkpoint"
 	@echo "  test-mi1             Milestone 1: geofence library CLI (no infrastructure needed)"
 	@echo ""
 	@echo "Going further — full five-phase cycle (see README.md):"
@@ -138,7 +139,7 @@ build-image:
 workshop-start: setup-python
 	@$(CHECKPOINT) workshop-start
 
-ex1-start ex1-solution ex2-start ex2-solution ex3-start ex3-solution ex4-start ex4-solution bonus-start bonus-solution: setup-python
+ex1-start ex1-solution ex2-start ex2-solution ex3-start ex3-solution ex4-start ex4-solution bonus-start bonus-solution spec-check: setup-python
 	@$(CHECKPOINT) $@
 
 # ---------------------------------------------------------------------------

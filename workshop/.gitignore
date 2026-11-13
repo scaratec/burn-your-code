@@ -28,3 +28,4 @@ terraform/terraform.tfstate.backup
 # Workshop state
 .burned
 .workshop-backup/
+.workshop-spec.json
