@@ -48,13 +48,13 @@ If you fall behind: shorten exercise 2 to 10 minutes and let late teams start ex
 
 ## 3. The exercises
 
-Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean environment (agent time only, without reading and typing).
+Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean environment: fresh clone, fresh agent home, `--mode auto`. They are agent time only; add reading and typing. Each run used roughly 0.5–2.5 million tokens, most of them cached input — far inside a personal daily quota, but a whole room on one account would not be.
 
 ### Exercise 1 — Decide the fence
 
 - **Start:** `agy --model gemini-3.8-flash-high --mode auto -i "$(cat exercises/ex1-fence-decision/PROMPT.md)"`. Participants who followed PREPARATION.md have already trusted the folder; anyone else gets "Do you trust the contents of this project?" — answer *Yes*, and if `agy` then asks before every file read, `/exit` and restart.
 - **What happens:** the agent reads AGENTS.md and ADR-0001, then asks three questions, one at a time, each with options, recommendation and consequences: inside or outside, numerical tolerance, GPS accuracy now or deferred. After the third answer it writes `governance/adr/0005-*.md`, usually `governance/limitations/0004-*.md`, and updates both indexes.
-- **Measured:** about 6 minutes including the three answers.
+- **Measured:** 6 minutes including the three answers (three runs: 5:38, 5:51, and 8:45 for a run that also went through the first-run questions and trusted the folder only in the session).
 - **Watch for:** participants who answer "outside" — perfectly fine, but their exercise 2 then expects `false` on the fence. Exercise 4 starts from the reference for everybody.
 - **Debrief:** both answers are legitimate if they are recorded. Reveal the reference decision (slide 15, answer key). Point out that the LIM tells the next agent what *not* to "fix".
 
@@ -62,7 +62,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - **Start:** own ADR-0005, or `make ex2-start` for the reference.
 - **What happens:** new rows in Layer 1 of the error path enumeration, then one new scenario outline `@mi1 @boundary` with the vertices and edge midpoints of HomePasture plus negative controls just beyond and just inside the fence. The agent runs `make test-mi1` and explains the failures.
-- **Measured:** 4–10 minutes (the slowest run spent a long time computing midpoints).
+- **Measured:** 2–7 minutes in clean runs (2:13, 4:01, 4:24, 6:43); one early run took 9:30. This is the exercise most likely to run long — see the run of show for how to shorten it.
 - **Expected result** with the reference decision: **24 passed, 4 failed** (which rows, and why: answer key). The old code is not wrong everywhere — it is *undecided*.
 - **Debrief:** error paths first; the negative controls are what stop an implementation from cheating with a huge tolerance.
 
@@ -70,7 +70,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - **Start:** everybody runs `make ex3-start` (own files are backed up), then a **new** agent session with the critic prompt.
 - **What happens:** the critic reads only Markdown and Gherkin and reports a findings table along the six edges of BDD Guidelines §14.3.
-- **Measured:** about 4.5 minutes. In every dry run the critic found all five defects.
+- **Measured:** 3–4 minutes (3:18, 3:37, 3:53). In every dry run the critic found all five defects, usually plus a few medium or low findings.
 - **Answer key:** slide 19 and `python3 facilitator/solutions.py answers`. Ask for a show of hands: who found all five? Are other findings real contradictions or matters of taste?
 - **Afterwards:** `make ex3-solution` restores the defect-free specification.
 
@@ -78,7 +78,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - **Start:** everybody runs `make ex4-start` (deletes all application code, `make test-mi1` is RED), then the prompt with the chosen language: `sed 's/LANGUAGE/Go/g'` etc.
 - **What happens:** the agent writes the CLI and a `./build.sh`, runs `make test-mi1`, fixes and repeats until the suite is green twice in a row.
-- **Measured:** 2.5–6.5 minutes in Python.
+- **Measured:** 3–7 minutes in Python (2:38, 3:03, 3:25, 4:08; the slowest earlier run 6:27).
 - **Expected result:** **28 passed, 0 failed**; `git status` shows no change under `governance/` or `bdd/`.
 - **Watch for:** compiled languages need their toolchain on the laptop; if a build fails because the compiler is missing, switch to Python. If someone's agent edited the feature file, that is the teaching moment of the day: the rule says read-only.
 - **Debrief:** show of hands per language. Same specification, different code, the fence rule holds everywhere.
@@ -87,7 +87,7 @@ Durations below are measured dry runs with `gemini-3.8-flash-high` in a clean en
 
 - `make bonus-start` loads the RED state of exercise 2 with a dishonest step file: `make test-mi1` is suddenly GREEN.
 - The auditor should name the lines where the step file computes the result itself and overrides what the CLI returned (details: answer key).
-- **Measured:** under 2 minutes. `make bonus-solution` restores the honest steps.
+- **Measured:** under 2.5 minutes; every run rejected the step file. `make bonus-solution` restores the honest steps.
 
 ## 4. Troubleshooting
 
