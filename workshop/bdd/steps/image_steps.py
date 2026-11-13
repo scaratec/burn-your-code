@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import socket
 import subprocess
 import time
 
@@ -97,15 +98,13 @@ def step_health_check(context, method_path, expected_status, timeout):
 def step_check_port(context, expected_port):
     if getattr(context, "container_network", "bridge") == "host":
         # With host networking docker inspect shows no port bindings.
-        # Verify directly that the host port is open.
-        result = subprocess.run(
-            ["ss", "-tlnH", f"sport = :{expected_port}"],
-            capture_output=True,
-            text=True,
-        )
-        assert result.stdout.strip(), (
+        # Verify directly that the port accepts TCP connections on the host.
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(2)
+            listening = sock.connect_ex(("127.0.0.1", expected_port)) == 0
+        assert listening, (
             f"Expected port {expected_port} to be listening on host"
-            " (--network=host container), but ss found nothing."
+            " (--network=host container), but nothing accepted a connection."
         )
         return
 

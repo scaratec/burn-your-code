@@ -12,7 +12,6 @@ Feature: Geofence Processor Service (Service B)
       | key                       | value                     |
       | port                      | 8081                      |
       | firestore-emulator-host   | localhost:8082            |
-      | pubsub-emulator-host      | localhost:8085            |
       | firestore-project-id      | equiguard-test            |
 
     # Separation of master data (Guideline 2.3) written directly to the mocked DB

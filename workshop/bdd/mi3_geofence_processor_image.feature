@@ -16,7 +16,6 @@ Feature: Geofence Processor OCI Image
       | host_port               | 9081           |
       | container_port          | 8081           |
       | FIRESTORE_EMULATOR_HOST | localhost:8082 |
-      | PUBSUB_EMULATOR_HOST    | localhost:8085 |
       | PROJECT_ID              | equiguard-test |
       | network                 | host           |
 

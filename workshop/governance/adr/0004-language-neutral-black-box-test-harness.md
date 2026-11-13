@@ -15,7 +15,7 @@ We implement the BDD test suite in **Python `behave`** (running in `.venv/`) usi
 | Milestone | Tag | Interface Under Test | Independent Verification Channel |
 |---|---|---|---|
 | **MI1** | `@mi1` | Executable `./bin/geofence-lib-test` reading JSON `{"point": {"lon": <float>, "lat": <float>}, "polygon": [{"lon": <float>, "lat": <float>}, ...]}` from `stdin` and writing `{"is_inside": <bool>}` to `stdout` (exit code 0) | Process `stdout` JSON |
-| **MI2** | `@mi2` | Executable `./bin/geofence-processor` started as a background OS process configured via env vars (`PORT`, `FIRESTORE_EMULATOR_HOST`, `PUBSUB_EMULATOR_HOST`, `PROJECT_ID`) | Firestore Emulator (`localhost:8082`) & HTTP `GET /health` |
+| **MI2** | `@mi2` | Executable `./bin/geofence-processor` started as a background OS process configured via env vars (`PORT`, `FIRESTORE_EMULATOR_HOST`, `PROJECT_ID`); Pub/Sub push deliveries are simulated as HTTP POSTs, so no Pub/Sub emulator is needed | Firestore Emulator (`localhost:8082`) & HTTP `GET /health` |
 | **MI3** | `@mi3` | OCI Container image built from `Dockerfile` with tag `equiguard/geofence-processor:test` | Firestore Emulator (`localhost:8082`), HTTP `GET /health`, HTTP status code (`400`), & socket/port inspection |
 | **MI4** | `@mi4` | Live Cloud Run service deployed via Terraform (`terraform/`), receiving real Pub/Sub messages | Real GCP Firestore in `project_id` (read from `bdd/mi4_cloud_run.feature`) |
 

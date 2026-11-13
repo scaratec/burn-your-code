@@ -16,7 +16,6 @@ def step_given_processor_config(context):
     # Set environment variables for the service process (ADR-0002, ADR-0004)
     env = os.environ.copy()
     env["FIRESTORE_EMULATOR_HOST"] = config["firestore-emulator-host"]
-    env["PUBSUB_EMULATOR_HOST"] = config.get("pubsub-emulator-host", "")
     env["PROJECT_ID"] = config["firestore-project-id"]
     env["PORT"] = config["port"]
     

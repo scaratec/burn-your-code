@@ -16,7 +16,6 @@ We implement `geofence-processor` as a stateless HTTP service deployed on **Goog
    - `PORT`: HTTP listening port (default `8081` in local/container runs).
    - `PROJECT_ID`: Google Cloud / Firestore project ID (e.g., `equiguard-test` locally, `randy-gupta-poc` in GCP).
    - `FIRESTORE_EMULATOR_HOST`: Optional host:port (`localhost:8082`) for local emulator runs; unset in live Cloud Run.
-   - `PUBSUB_EMULATOR_HOST`: Optional host:port (`localhost:8085`) for local runs.
 2. **Endpoints:**
    - `GET /health`: Returns HTTP `200 OK` as soon as the HTTP server is ready to accept requests.
    - `POST /telemetry-push`: Accepts a standard Google Cloud Pub/Sub push envelope:
