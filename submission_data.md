@@ -69,17 +69,20 @@ Zum Einstieg sehen wir im Zeitraffer-Video, wie ein Agent aus null Zeilen Anwend
 
 ## Target Audience and Prerequisites
 
-Software engineers and architects who want to move beyond ad-hoc "Vibe Coding" to reproducible, specification-driven AI engineering. Bring a laptop with Docker, Python 3.11+, Antigravity CLI (`agy`) or Gemini CLI, and (optionally for Milestone 4) a Google Cloud account.
+Software engineers and architects who want to move beyond ad-hoc "Vibe Coding" to reproducible, specification-driven AI engineering. Bring a laptop (macOS, Linux or Windows with WSL2) with git, make, Python 3.11+ and the Antigravity CLI (`agy`) signed in with a Google account. No Docker and no cloud account needed for the exercises.
 
 ---
 
-## Workshop Outline (90 / 120 / 180 min)
+## Workshop Outline (90 min)
 
-| Duration (120m) | Phase | Activity |
+| Duration | Block | Activity |
 |---:|---|---|
-| 15 min | **Phase 0: Kickoff & Video** | From House of Cards to Foundation (95/5 Shift) + Autonomous Rebuild Video Demo |
-| 25 min | **Phase 1: ADRs & LIMs** | Guided architecture dialogue with Antigravity CLI (`agy`) → ADRs 0001–0004 & LIMs 0001–0002 |
-| 25 min | **Phase 2: Feature Files** | Systematic error path enumeration (§4.5) + authoring Gherkin features (`mi1`–`mi4`) |
-| 15 min | **Phase 3: Spec Critic** | Whole-picture audit of ADRs, LIMs & Features with `bdd-critic` → closing specification gaps |
-| 20 min | **Phase 4: Step Files (RED)** | Generating language-neutral black-box Python `behave` steps + §13 Step Honesty Audit |
-| 20 min | **Phase 5: Code & GCP (GREEN)** | Autonomous implementation in any language (`make test-all`) + Terraform rollout to Cloud Run (`make test-mi4`) |
+| 18 min | **Kickoff & video** | From House of Cards to Foundation (95/5 shift), video of an autonomous rebuild (Gemini 3.8 Flash, 525 scenarios, zero lines of code), EquiGuard, `make check` |
+| 15 min | **Exercise 1: Decide the fence** | Architecture dialogue with Antigravity CLI (`agy`), one question at a time → ADR-0005 and LIM-0004 |
+| 16 min | **Exercise 2: Make it red** | Error paths first (§4.5), then boundary scenarios in Gherkin → RED |
+| 17 min | **Exercise 3: Let the critic find the bugs** | The specification critic (§14) audits ADRs, LIMs, error paths and features and hunts five hidden defects |
+| 18 min | **Exercise 4: Burn your code** | All code deleted; Gemini rebuilds the geofence library in any language until every scenario is GREEN |
+| 6 min | **Wrap-up** | Take-aways, going further: full five-phase cycle, milestones 2–4 up to Google Cloud Run |
+
+Longer formats (120–180 min) add the bonus step honesty audit (§13) and the full five-phase cycle; milestones 2–4 run as instructor demo or hands-on with a GCP project.
+

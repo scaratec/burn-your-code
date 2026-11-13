@@ -1,6 +1,6 @@
 # Burn Your Code: Specification-First Engineering for Autonomous AI Agents
 
-This repository contains the guidelines, governance framework, slide deck, video demo pipeline, and hands-on workshop for **AI-Native Specification-First Engineering** with **Antigravity CLI (`agy`)**, **Google Gemini**, and **Behavior-Driven Development (BDD)**.
+This repository contains the guidelines, governance framework, talk deck, and hands-on workshop for **AI-Native Specification-First Engineering** with **Antigravity CLI (`agy`)**, **Google Gemini**, and **Behavior-Driven Development (BDD)**.
 
 ---
 
@@ -30,25 +30,23 @@ This project demonstrates the **95 / 5 Shift**:
 
 ## Hands-On Workshop (`/workshop`)
 
-The [`/workshop`](./workshop/) directory contains the complete hands-on workshop:
+**90 minutes, four exercises, one question: a horse stands exactly on the fence — inside or outside?**
 
-**EquiGuard — Event-Driven GPS Pasture Geofencing on Google Cloud**
+The [`/workshop`](./workshop/) directory contains a ready-to-run workshop around **EquiGuard**, a GPS pasture geofencing service. Participants use the **Antigravity CLI (`agy`)** with **Gemini 3.8 Flash** and never write application code by hand:
 
-Participants use **Antigravity CLI (`agy`)** and **Gemini** to walk through all five phases:
-1. Conduct the guided architecture dialogue (`prompts/01-architecture-dialogue.md`) to create **ADRs 0000–0004** and **LIMs 0001–0002**.
-2. Enumerate all 15 error paths (`bdd/00_error_path_enumeration.md`) and write the four Gherkin feature files (`prompts/02-error-paths-and-features.md`).
-3. Audit the specification as a whole with the **Specification Critic** (`prompts/03-spec-critic.md`).
-4. Generate language-neutral black-box Python `behave` steps (`prompts/04a-step-definitions.md`), audit them for test honesty (`prompts/04b-step-honesty-audit.md`), and verify the **RED** state.
-5. Run `make burn`, pick **any programming language**, and let Gemini autonomously implement the service (`prompts/05-autonomous-implementation.md`) until all milestones pass — locally and on live **Google Cloud Run**!
+| # | Exercise | Phase |
+|---|---|---|
+| 1 | Decide the fence: an architecture dialogue produces ADR-0005 and LIM-0004 | Decisions |
+| 2 | Make it red: error paths first, then boundary scenarios | Error paths & feature files |
+| 3 | Let the critic find the bugs: five defects hidden in the specification | Specification critic |
+| 4 | Burn your code: delete all code, rebuild it in any language until green | Autonomous implementation |
+| + | Can the tests cheat? A dishonest step file | Step honesty audit |
 
-| Milestone | Tag | What It Verifies | Environment |
-|---|---|---|---|
-| **MI1** | `@mi1` | Point-in-polygon ray-casting algorithm (`HomePasture` convex + `ComplexPasture` concave) | CLI (`stdin`/`stdout` JSON), no network |
-| **MI2** | `@mi2` | HTTP `geofence-processor` service + Pub/Sub push ingestion + Firestore persistence | Local Firestore (`:8082`) & Pub/Sub (`:8085`) emulators |
-| **MI3** | `@mi3` | Containerized OCI image (`GET /health`, port `8081`, HTTP `400` validation, behavioral equivalence) | Docker + local emulators |
-| **MI4** | `@mi4` | Live production deployment provisioned via Terraform (`project_id` read from Gherkin!) | Real GCP Cloud Run, Pub/Sub & Firestore |
+- Participants: [`workshop/PREPARATION.md`](./workshop/PREPARATION.md) (do at home, ends with `make check`), then [`workshop/exercises/README.md`](./workshop/exercises/README.md)
+- Slides: [`facilitator/slides/index.html`](./facilitator/slides/index.html) (offline) and [`facilitator/slides/deck.pdf`](./facilitator/slides/deck.pdf), including the opening video of an autonomous rebuild
+- Facilitators: [`facilitator/FACILITATOR.md`](./facilitator/FACILITATOR.md) — timing, reference solutions, troubleshooting
 
-See [`/workshop/README.md`](./workshop/README.md) for the step-by-step participant guide and `Makefile` phase checkpoints (`make phase1-start`, `make checkpoint-adrs`, `make checkpoint-features`, `make burn`, `make restore-all`).
+All exercises run locally (Python + `agy`); every exercise has a checkpoint to jump in. Going further — the full five-phase cycle and milestones 2–4 up to Google Cloud Run — is described in [`workshop/README.md`](./workshop/README.md).
 
 ---
 
@@ -67,8 +65,8 @@ See [`/workshop/README.md`](./workshop/README.md) for the step-by-step participa
 
 ## Repository Structure
 
-- **[`/workshop`](./workshop/)**: Hands-on 5-phase BDD & ADR workshop with Antigravity CLI prompts, language-neutral harness, and 4 GCP milestones.
-- **[`/slides`](./slides/)**: Standalone offline **Reveal.js HTML deck** ([`slides/index.html`](./slides/index.html)) plus companion Markdown slide cards (`01`–`19`).
-- **[`/video-demo`](./video-demo/)**: Recording (`tmux` + live dashboard) and `ffmpeg` assembly pipeline for the autonomous rebuild kickoff video.
+- **[`/workshop`](./workshop/)**: 90-minute hands-on workshop (EquiGuard) with exercises, checkpoints, slides and the full five-phase cycle for self-study.
+- **[`/facilitator`](./facilitator/)**: Facilitator guide, reference solutions and the planted defects — kept outside `workshop/` so coding agents do not read them.
+- **[`/slides`](./slides/)**: Offline **Reveal.js deck for the talk** ([`slides/index.html`](./slides/index.html)) plus companion Markdown slide cards (`01`–`19`).
 - **[`/governance`](./governance/)**: ADR + LIM templates and framework documentation.
 - **[`submission_data.md`](./submission_data.md)**: Rethought title options, elevator pitch, abstracts (EN/DE), key takeaways, and workshop outline.
