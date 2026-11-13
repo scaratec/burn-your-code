@@ -1,0 +1,6 @@
+/* Schriften des Kundenportals, selbst ausgeliefert (keine fremden Hosts). Lizenz: SIL Open Font License 1.1, je Ordner OFL.txt.
+   Variable Schriften mit Gewichtsachse, Zeichensatz Latin. Für Seiten ohne Webserver (file://) gibt es schriften-eingebettet.css
+   mit denselben Dateien als data-URL (erzeugt mit werkzeug/schriften.mjs); im Produkt gilt diese Datei, weil die CSP font-src 'self' keine data-URLs erlaubt. */
+@font-face { font-family: "Raleway"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("raleway/raleway-var-latin.woff2") format("woff2"); }
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("roboto/roboto-var-latin.woff2") format("woff2"); }
+@font-face { font-family: "Roboto Mono"; font-style: normal; font-weight: 100 700; font-display: swap; src: url("roboto-mono/roboto-mono-var-latin.woff2") format("woff2"); }

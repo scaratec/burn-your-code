@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Burn Your Code — Specification-First Engineering for Autonomous AI Agents</title>
+  <link rel="stylesheet" href="reveal/dist/reset.css">
+  <link rel="stylesheet" href="reveal/dist/reveal.css">
+  <link rel="stylesheet" href="schriften/schriften.css">
+  <link rel="stylesheet" href="deck.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- 1 · Title -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="split-frame">
+          <div class="split-pillar">
+            <div class="pillar-metric">
+              <p class="pillar-number">95 / 5</p>
+              <p class="pillar-label">Specification &amp; proof vs. AI build</p>
+            </div>
+            <div class="pillar-metric">
+              <p class="pillar-number">4</p>
+              <p class="pillar-label">Hands-on exercises · live</p>
+            </div>
+          </div>
+          <div class="split-stage">
+            <div class="split-top">
+              <p class="eyebrow">BURN YOUR CODE · WORKSHOP</p>
+              <div class="brand-lockup">
+                <img class="brand-emblem" src="marke/scaratec-logo-320.png" alt="SCARATEC emblem">
+                <span class="brand-word">SCARATEC<sup>®</sup></span>
+              </div>
+            </div>
+            <div class="hero-block">
+              <h1 class="hero-title">Burn Your Code</h1>
+              <div class="hero-rule"></div>
+              <p class="hero-subtitle">Specification-First Engineering for Autonomous AI Agents</p>
+            </div>
+            <div class="split-footer">
+              <span>Hands-on workshop · 90 minutes</span>
+              <span><strong>Randy N. Gupta</strong> · Cloud Architect · SCARATEC</span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Welcome. Today nobody writes application code by hand. We write what the code must do — and let an agent build it.
+        </aside>
+      </section>
+
+      <!-- 2 · About me -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">02 · ABOUT ME</p>
+            </div>
+            <span class="slide-index">02 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="about-grid">
+              <img class="about-photo" src="media/randy.jpg" alt="Portrait of Randy N. Gupta">
+              <div>
+                <h2 class="about-name">Randy N. Gupta</h2>
+                <div class="hero-rule"></div>
+                <p class="about-role">Cloud Architect · SCARATEC</p>
+                <p class="about-contact">gupta@scaratec.com · www.scaratec.com</p>
+                <div class="about-brand-focus">
+                  <img class="brand-emblem" src="marke/scaratec-logo-320.png" alt="SCARATEC emblem">
+                  <span class="brand-word">SCARATEC<sup>®</sup></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="about-badges-bar">
+            <p class="about-badges-label">Certifications &amp; community</p>
+            <div class="about-badges-list">
+              <div class="badge-item">
+                <img src="media/gde-cloud-ai.png" alt="Google Developer Expert — Google Cloud: Cloud AI">
+                <span>Google Developer Expert · Cloud AI</span>
+              </div>
+              <div class="badge-item">
+                <img src="media/cert-pca.png" alt="Google Cloud Professional Cloud Architect">
+                <span>Professional Cloud Architect</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          I design cloud platforms at SCARATEC and build services with AI agents every day — specification first.
+        </aside>
+      </section>
+
+      <!-- 3 · Agenda (90 min) -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">WORKSHOP SCHEDULE</p>
+              <h2 class="slide-title">Agenda (90 min)</h2>
+            </div>
+            <span class="slide-index">03 / 25</span>
+          </div>
+          <div class="slide-body slide-body--top">
+            <table class="deck-table agenda-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Block</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="agenda-time">0:00</td>
+                  <td>Why specification-first</td>
+                </tr>
+                <tr>
+                  <td class="agenda-time">0:08</td>
+                  <td>Video: one prompt, a complete MCP server</td>
+                </tr>
+                <tr>
+                  <td class="agenda-time">0:13</td>
+                  <td>EquiGuard and the setup check</td>
+                </tr>
+                <tr class="agenda-row--exercise">
+                  <td class="agenda-time">0:18</td>
+                  <td>Exercise 1 · Decide the fence <span class="agenda-tag">▸ HANDS-ON</span></td>
+                </tr>
+                <tr class="agenda-row--exercise">
+                  <td class="agenda-time">0:33</td>
+                  <td>Exercise 2 · Make it red <span class="agenda-tag">▸ HANDS-ON</span></td>
+                </tr>
+                <tr class="agenda-row--exercise">
+                  <td class="agenda-time">0:49</td>
+                  <td>Exercise 3 · Let the critic find the bugs <span class="agenda-tag">▸ HANDS-ON</span></td>
+                </tr>
+                <tr class="agenda-row--exercise">
+                  <td class="agenda-time">1:06</td>
+                  <td>Exercise 4 · Burn your code <span class="agenda-tag">▸ HANDS-ON</span></td>
+                </tr>
+                <tr>
+                  <td class="agenda-time">1:24</td>
+                  <td>Wrap-up</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 · Vibe coding builds a house of cards -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">THE PROBLEM</p>
+              <h2 class="slide-title">Vibe coding builds a house of cards</h2>
+            </div>
+            <span class="slide-index">04 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="card-grid-3">
+              <div class="info-card">
+                <p class="card-num">01</p>
+                <p class="card-text">AI writes code faster than teams make decisions.</p>
+              </div>
+              <div class="info-card">
+                <p class="card-num">02</p>
+                <p class="card-text">Agents remember nothing between sessions.</p>
+              </div>
+              <div class="info-card">
+                <p class="card-num">03</p>
+                <p class="card-text">Every assumption that is not written down is renegotiated — or hallucinated — on the next prompt.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Ad-hoc prompting gives plausible code in minutes and unmaintainable debt in hours. The problem is not the model; it is the missing record of decisions.
+        </aside>
+      </section>
+
+      <!-- 5 · The 95 / 5 shift -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">SPECIFICATION-FIRST</p>
+              <h2 class="slide-title">The 95 / 5 shift</h2>
+            </div>
+            <span class="slide-index">05 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="shift-grid">
+              <div class="shift-box shift-box--95">
+                <p class="shift-big">95 %</p>
+                <p class="shift-desc">understand the problem, decide, make it verifiable</p>
+              </div>
+              <div class="shift-box shift-box--5">
+                <p class="shift-big">5 %</p>
+                <p class="shift-desc">implementation by the AI</p>
+              </div>
+            </div>
+            <div class="callout-bar callout-bar--blue">
+              When the specification is complete, code becomes a disposable build artifact.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 · The specification triad -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">THREE ARTIFACTS</p>
+              <h2 class="slide-title">The specification triad</h2>
+            </div>
+            <span class="slide-index">06 / 25</span>
+          </div>
+          <div class="slide-body">
+            <table class="deck-table triad-table">
+              <thead>
+                <tr>
+                  <th>Register</th>
+                  <th>Question</th>
+                  <th>Where</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="triad-register">ADR — Architecture Decision Record</td>
+                  <td>Why?</td>
+                  <td class="triad-where">governance/adr/</td>
+                </tr>
+                <tr>
+                  <td class="triad-register">LIM — Limitation Record</td>
+                  <td>Where not (yet)?</td>
+                  <td class="triad-where">governance/limitations/</td>
+                </tr>
+                <tr>
+                  <td class="triad-register">Feature file + black-box steps</td>
+                  <td>What, observably?</td>
+                  <td class="triad-where">bdd/</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="callout-bar">
+              All of it is Markdown and Gherkin: one agent can read the whole specification in one context window.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 · Five phases, one rule -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">WORKFLOW</p>
+              <h2 class="slide-title">Five phases, one rule</h2>
+            </div>
+            <span class="slide-index">07 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="phase-list">
+              <div class="phase-row">
+                <span class="phase-num">1.</span>
+                <span class="phase-text">Decide → ADRs, LIMs</span>
+                <span></span>
+              </div>
+              <div class="phase-row">
+                <span class="phase-num">2.</span>
+                <span class="phase-text">Error paths, then feature files</span>
+                <span class="status-badge status-badge--red">■ RED</span>
+              </div>
+              <div class="phase-row">
+                <span class="phase-num">3.</span>
+                <span class="phase-text">Specification critic</span>
+                <span class="status-badge status-badge--audited">◎ AUDITED</span>
+              </div>
+              <div class="phase-row">
+                <span class="phase-num">4.</span>
+                <span class="phase-text">Black-box steps + honesty audit</span>
+                <span class="status-badge status-badge--still-red">◆ STILL RED</span>
+              </div>
+              <div class="phase-row">
+                <span class="phase-num">5.</span>
+                <span class="phase-text">Autonomous implementation, any language</span>
+                <span class="status-badge status-badge--green">▲ GREEN</span>
+              </div>
+            </div>
+            <div class="callout-bar callout-bar--dark">
+              <strong>Feedback loop rule:</strong> whatever the critic, the audit or reality finds changes the ADR, LIM or feature file first — never the code directly.
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Today you walk through phases 1, 2, 3 and 5. Phase 4 is the bonus.
+        </aside>
+      </section>
+
+      <!-- 8 · Before the video (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">LIVE RECORDING · CONTEXT</p>
+              <h2 class="slide-title">Before the video</h2>
+            </div>
+            <span class="slide-index">08 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="dark-grid-2x2">
+              <div class="dark-card">
+                <p class="dark-card-label">SYSTEM</p>
+                <p class="dark-card-value"><code>imap-mcp</code></p>
+                <p class="dark-card-sub">a security-focused MCP server for mailboxes</p>
+              </div>
+              <div class="dark-card">
+                <p class="dark-card-label">START</p>
+                <p class="dark-card-value">0 lines</p>
+                <p class="dark-card-sub">of server code</p>
+              </div>
+              <div class="dark-card">
+                <p class="dark-card-label">INPUT (READ-ONLY)</p>
+                <p class="dark-card-value">525 scenarios</p>
+                <p class="dark-card-sub">40 ADRs · 23 LIMs · read-only</p>
+              </div>
+              <div class="dark-card">
+                <p class="dark-card-label">AGENT</p>
+                <p class="dark-card-value">Gemini 3.8 Flash</p>
+                <p class="dark-card-sub">One prompt in the Antigravity CLI</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9 · Video (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="video-slide-frame">
+          <div class="video-header">
+            <p class="eyebrow">AUTONOMOUS REBUILD · 3:20 · NO SOUND</p>
+            <p class="video-hint">Click video or press Enter to play / pause</p>
+          </div>
+          <div class="video-stage">
+            <video id="rebuild-video" class="video-player" controls muted playsinline preload="metadata" poster="media/video-poster.png">
+              <source src="media/Burn-Your-Code-Autonomous-Rebuild-imap-mcp.mp4" type="video/mp4">
+            </video>
+            <img class="video-print-poster" src="media/video-poster.png" alt="Autonomous rebuild video poster showing imap-mcp counters">
+          </div>
+        </div>
+        <aside class="notes">
+          Let it run. Point at the counters at the bottom: agent time, lines of Python, scenarios green.
+        </aside>
+      </section>
+
+      <!-- 10 · What really happened -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">HONEST POST-RUN DEBRIEF</p>
+              <h2 class="slide-title">What really happened</h2>
+            </div>
+            <span class="slide-index">10 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="fact-list">
+              <div class="fact-row">
+                <span class="fact-num">01</span>
+                <span class="fact-text">525 / 525 scenarios green, twice in a row — re-run independently</span>
+                <span></span>
+              </div>
+              <div class="fact-row">
+                <span class="fact-num">02</span>
+                <span class="fact-text">Specification unchanged · no web search · original code never reached</span>
+                <span></span>
+              </div>
+              <div class="fact-row">
+                <span class="fact-num">03</span>
+                <span class="fact-text">10 h 14 min agent time, two stops because the model quota ran out</span>
+                <span></span>
+              </div>
+              <div class="fact-row fact-row--warn">
+                <span class="fact-num">04</span>
+                <span class="fact-text">After the second resume the orchestrator edited code itself — a rule break</span>
+                <span class="fact-tag">▲ RULE BREAK</span>
+              </div>
+              <div class="fact-row fact-row--warn">
+                <span class="fact-num">05</span>
+                <span class="fact-text">Found afterwards: a test password as fallback in the generated code. No scenario forbade it.</span>
+                <span class="fact-tag">▲ SPEC GAP</span>
+              </div>
+            </div>
+            <div class="callout-bar callout-bar--blue">
+              The code is only as good as the specification.
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Be honest about the run. The last bullet is the bridge to today: specifications have gaps, and today you close one.
+        </aside>
+      </section>
+
+      <!-- 11 · Meet EquiGuard -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">THE WORKSHOP SYSTEM</p>
+              <h2 class="slide-title">Meet EquiGuard</h2>
+            </div>
+            <span class="slide-index">11 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="equiguard-grid">
+              <div class="equiguard-points">
+                <div class="equiguard-point">
+                  GPS collars on horses send a ping: <code class="code-inline">lon</code>, <code class="code-inline">lat</code>, <code class="code-inline">zone</code>
+                </div>
+                <div class="equiguard-point">
+                  Inside the pasture polygon? If not: alert
+                </div>
+                <div class="equiguard-point">
+                  Today: milestone 1 only — the geofence library as a small CLI, tested in milliseconds
+                </div>
+                <div class="equiguard-point equiguard-point--muted">
+                  Milestones 2–4 (service, container, Cloud Run): see "Going further"
+                </div>
+              </div>
+              <div class="equiguard-diagram">
+                <div class="eq-node">
+                  <p class="eq-node-title">COLLAR PING</p>
+                  <p class="eq-node-body">lon, lat, zone</p>
+                </div>
+                <div class="eq-arrow">↓</div>
+                <div class="eq-node eq-node--blue">
+                  <p class="eq-node-title">MILESTONE 1 · TODAY</p>
+                  <p class="eq-node-body">Geofence library CLI</p>
+                </div>
+                <div class="eq-arrow">↓</div>
+                <div class="eq-node">
+                  <p class="eq-node-title">VERDICT</p>
+                  <p class="eq-node-body">INSIDE or ALERT</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12 · Setup check (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">ENVIRONMENT CHECK</p>
+              <h2 class="slide-title">Setup check</h2>
+            </div>
+            <span class="slide-index">12 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="setup-stack">
+              <div class="cmd-panel cmd-panel--green">
+                <div class="cmd-head">
+                  <p class="cmd-label">1 · VERIFY WORKSHOP FOLDER</p>
+                  <p class="cmd-note">Run before Exercise 1</p>
+                </div>
+                <pre class="cmd-pre">cd burn-your-code/workshop</pre>
+                <pre class="cmd-pre">make check</pre>
+              </div>
+
+              <div class="cmd-panel">
+                <div class="cmd-head">
+                  <p class="cmd-label">2 · STANDARD EXERCISE COMMAND</p>
+                  <p class="cmd-note">One command per exercise</p>
+                </div>
+                <pre class="cmd-pre cmd-pre--compact">agy --model gemini-3.8-flash-high --mode auto <span class="nowrap">-i "$(cat exercises/&lt;exercise&gt;/PROMPT.md)"</span></pre>
+              </div>
+
+              <div class="setup-row-2">
+                <div class="ex-card ex-card--warn">
+                  <p class="ex-card-title">◆ FIRST TIME IN FOLDER</p>
+                  <p>Not prepared? Run <code class="code-inline">agy</code> once in this folder, answer "Yes, I trust this folder", <code class="code-inline">/exit</code> — then start the exercise.</p>
+                </div>
+                <div class="ex-card">
+                  <p class="ex-card-title">RECOVERY &amp; BACKUP</p>
+                  <p>Behind? <code class="code-inline">make exN-start</code> jumps in, <code class="code-inline">make exN-solution</code> loads the reference. Backups go to <code class="code-inline">.workshop-backup/</code>.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13 · The question of the day -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">EQUIGUARD · THE QUESTION OF THE DAY</p>
+            </div>
+            <span class="slide-index">13 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="polygon-layout">
+              <div class="polygon-left">
+                <div>
+                  <h2 class="question-big">A horse stands exactly on the fence.</h2>
+                  <p class="question-emphasis">Inside or outside?</p>
+                </div>
+                <div class="gap-card">
+                  <p class="gap-title">ADR-0001 GAP</p>
+                  <p class="gap-text">ADR-0001 says "ray casting". It says nothing about the fence — and ray casting is ambiguous there.</p>
+                </div>
+              </div>
+              <div class="polygon-panel">
+                <div class="polygon-panel-head">
+                  <span class="polygon-panel-title">HOMEPASTURE POLYGON</span>
+                  <span class="polygon-panel-meta">ray casting = ??</span>
+                </div>
+                <svg class="polygon-svg" viewBox="0 0 772 620" role="img" aria-label="HomePasture polygon showing a square marker on an edge and a diamond marker on a vertex with dashed ray casting arrows">
+                  <defs>
+                    <marker id="ray-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+                      <path d="M 0 1 L 12 6 L 0 11 z" fill="#3d434b"></path>
+                    </marker>
+                  </defs>
+                  <!-- Subtle coordinate grid -->
+                  <g stroke="#dfe2e6" stroke-width="1">
+                    <line x1="20" y1="120" x2="752" y2="120"></line>
+                    <line x1="20" y1="240" x2="752" y2="240"></line>
+                    <line x1="20" y1="360" x2="752" y2="360"></line>
+                    <line x1="20" y1="480" x2="752" y2="480"></line>
+                    <line x1="160" y1="20" x2="160" y2="560"></line>
+                    <line x1="340" y1="20" x2="340" y2="560"></line>
+                    <line x1="520" y1="20" x2="520" y2="560"></line>
+                    <line x1="700" y1="20" x2="700" y2="560"></line>
+                  </g>
+                  <!-- Pasture polygon -->
+                  <polygon points="84,188 456,118 614,330 416,526 128,456" fill="#eef0ff" stroke="#0000b2" stroke-width="5"></polygon>
+                  <!-- Vertices -->
+                  <circle cx="84" cy="188" r="8" fill="#0000b2"></circle>
+                  <circle cx="456" cy="118" r="8" fill="#0000b2"></circle>
+                  <circle cx="416" cy="526" r="8" fill="#0000b2"></circle>
+                  <circle cx="128" cy="456" r="8" fill="#0000b2"></circle>
+                  <!-- Ray-casting arrows -->
+                  <line x1="286" y1="153" x2="736" y2="153" stroke="#3d434b" stroke-width="3.5" stroke-dasharray="12 8" marker-end="url(#ray-arrow)"></line>
+                  <line x1="634" y1="330" x2="736" y2="330" stroke="#3d434b" stroke-width="3.5" stroke-dasharray="12 8" marker-end="url(#ray-arrow)"></line>
+                  <!-- Point on Edge (Square) -->
+                  <rect x="256" y="139" width="28" height="28" fill="#0000b2" stroke="#ffffff" stroke-width="3"></rect>
+                  <line x1="270" y1="78" x2="270" y2="138" stroke="#0000b2" stroke-width="3"></line>
+                  <rect x="140" y="20" width="260" height="58" fill="#ffffff" stroke="#0000b2" stroke-width="3"></rect>
+                  <text x="270" y="59" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700" font-size="28" fill="#0000b2">■ ON EDGE</text>
+                  <!-- Point on Vertex (Diamond) -->
+                  <polygon points="614,308 636,330 614,352 592,330" fill="#a1121b" stroke="#ffffff" stroke-width="3"></polygon>
+                  <line x1="614" y1="354" x2="614" y2="414" stroke="#a1121b" stroke-width="3"></line>
+                  <rect x="444" y="414" width="288" height="58" fill="#ffffff" stroke="#a1121b" stroke-width="3"></rect>
+                  <text x="588" y="453" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700" font-size="28" fill="#a1121b">◆ ON VERTEX</text>
+                  <!-- Center & Axis Labels -->
+                  <text x="330" y="334" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700" font-size="30" fill="#0000b2">INSIDE?</text>
+                  <text x="20" y="604" font-family="Roboto Mono, monospace" font-weight="500" font-size="28" fill="#3d434b">lon / lat</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 14 · Exercise 1 · Decide the fence · 12 min (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame">
+          <div class="ex-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">EXERCISE 1 OF 4 · PHASE 1: DECIDE</p>
+              <h2 class="slide-title">Decide the fence</h2>
+            </div>
+            <div class="time-box">
+              <p class="time-label">TIME</p>
+              <p class="time-value">12 min</p>
+            </div>
+          </div>
+          <div class="slide-body slide-body--top">
+            <div class="cmd-panel">
+              <div class="cmd-head">
+                <p class="cmd-label">COMMAND</p>
+                <p class="cmd-note">Run in workshop folder</p>
+              </div>
+              <pre class="cmd-pre">agy --model gemini-3.8-flash-high --mode auto <span class="nowrap">-i "$(cat exercises/ex1-fence-decision/PROMPT.md)"</span></pre>
+            </div>
+            <div class="ex-columns">
+              <div class="ex-card">
+                <p class="ex-card-title">GOAL</p>
+                <p>An architecture decision in dialogue with the agent — one question at a time.</p>
+              </div>
+              <div class="ex-card ex-card--done">
+                <p class="ex-card-title">✓ DONE WHEN</p>
+                <ul class="ex-list">
+                  <li><code class="code-inline">governance/adr/0005-*.md</code> exists</li>
+                  <li>Deferred topics are in <code class="code-inline">governance/limitations/0004-*.md</code></li>
+                  <li>Both indexes list them</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15 · Debrief 1 -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">DEBRIEF · EXERCISE 1</p>
+              <h2 class="slide-title">Debrief 1</h2>
+            </div>
+            <span class="slide-index">15 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="debrief-stack">
+              <div class="debrief-card">
+                <p class="debrief-label">01 · PRINCIPLE</p>
+                <p class="debrief-text">Inside or outside? Both are legitimate — as long as the decision is written down.</p>
+              </div>
+              <div class="debrief-card debrief-card--highlight">
+                <p class="debrief-label">02 · REFERENCE DECISION</p>
+                <p class="debrief-text">On the fence counts as <strong>inside</strong>; tolerance <code class="code-inline">1e-9°</code> (about 0.1 mm, rounding only); GPS accuracy deferred to <code class="code-inline">LIM-0004</code>.</p>
+              </div>
+              <div class="debrief-card">
+                <p class="debrief-label">03 · WHY A LIM MATTERS</p>
+                <p class="debrief-text">A LIM tells the next agent what <em>not</em> to "fix".</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16 · Exercise 2 · Make it red · 13 min (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame">
+          <div class="ex-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">EXERCISE 2 OF 4 · PHASE 2: RED</p>
+              <h2 class="slide-title">Make it red</h2>
+            </div>
+            <div class="time-box">
+              <p class="time-label">TIME</p>
+              <p class="time-value">13 min</p>
+            </div>
+          </div>
+          <div class="slide-body slide-body--top">
+            <div class="cmd-panel">
+              <div class="cmd-head">
+                <p class="cmd-label">COMMAND</p>
+                <p class="cmd-note">Run in workshop folder</p>
+              </div>
+              <pre class="cmd-pre">agy --model gemini-3.8-flash-high --mode auto <span class="nowrap">-i "$(cat exercises/ex2-red-scenarios/PROMPT.md)"</span></pre>
+            </div>
+            <div class="ex-columns">
+              <div class="ex-card">
+                <p class="ex-card-title">GOAL</p>
+                <p>Error paths first, then scenarios — and a red test suite.</p>
+              </div>
+              <div class="ex-card ex-card--done">
+                <p class="ex-card-title">✓ DONE WHEN</p>
+                <ul class="ex-list">
+                  <li>New rows in <code class="code-inline">bdd/00_error_path_enumeration.md</code></li>
+                  <li>A new scenario outline in <code class="code-inline">bdd/mi1_geofence_library.feature</code></li>
+                  <li><code class="code-inline">make test-mi1</code> is <span class="status-badge status-badge--dark-red">■ RED</span>, the 16 old scenarios still pass</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 17 · Debrief 2 -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">DEBRIEF · EXERCISE 2</p>
+              <h2 class="slide-title">Debrief 2</h2>
+            </div>
+            <span class="slide-index">17 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="debrief-stack">
+              <div class="stat-grid-3">
+                <div class="stat-card">
+                  <p class="stat-num">4</p>
+                  <p class="stat-desc">vertices (on the fence)</p>
+                </div>
+                <div class="stat-card">
+                  <p class="stat-num">4</p>
+                  <p class="stat-desc">edge midpoints</p>
+                </div>
+                <div class="stat-card">
+                  <p class="stat-num">4</p>
+                  <p class="stat-desc">negative controls 0.1 m from the fence</p>
+                </div>
+              </div>
+              <div class="debrief-card debrief-card--red">
+                <p class="debrief-label">■ RED · 24 PASSED, 4 FAILED (12 ROWS)</p>
+                <p class="debrief-text">The old code says "outside" for some points on the fence and "inside" for others.</p>
+              </div>
+              <div class="debrief-card">
+                <p class="debrief-label">ANTI-CHEAT DESIGN</p>
+                <p class="debrief-text">Without the negative controls, a huge tolerance would also turn green.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 18 · Exercise 3 · Let the critic find the bugs · 13 min (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame">
+          <div class="ex-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">EXERCISE 3 OF 4 · PHASE 3: AUDITED</p>
+              <h2 class="slide-title">Let the critic find the bugs</h2>
+            </div>
+            <div class="time-box">
+              <p class="time-label">TIME</p>
+              <p class="time-value">13 min</p>
+            </div>
+          </div>
+          <div class="slide-body slide-body--top">
+            <div class="cmd-panel">
+              <div class="cmd-head">
+                <p class="cmd-label">COMMAND</p>
+                <p class="cmd-note">Run <code class="code-inline">make ex3-start</code>, then in a new session</p>
+              </div>
+              <pre class="cmd-pre">make ex3-start</pre>
+              <pre class="cmd-pre">agy --model gemini-3.8-flash-high --mode auto <span class="nowrap">-i "$(cat exercises/ex3-spec-critic/PROMPT.md)"</span></pre>
+            </div>
+            <div class="ex-columns">
+              <div class="ex-card">
+                <p class="ex-card-title">GOAL</p>
+                <p>Five defects are hidden in the specification. The critic reads only Markdown and Gherkin.</p>
+              </div>
+              <div class="ex-card ex-card--done">
+                <p class="ex-card-title">✓ DONE WHEN</p>
+                <ul class="ex-list">
+                  <li>You have the findings table</li>
+                  <li>You know how many of the five defects it found</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 19 · Reveal: the five defects -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">DEBRIEF · EXERCISE 3</p>
+              <h2 class="slide-title">Reveal: the five defects</h2>
+            </div>
+            <span class="slide-index">19 / 25</span>
+          </div>
+          <div class="slide-body slide-body--top">
+            <table class="deck-table defect-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Edge</th>
+                  <th>Defect</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="defect-num">1</td>
+                  <td class="defect-edge">Decisions vs. scenarios</td>
+                  <td>A vertex is expected outside — <code class="code-inline">ADR-0005</code> says inside</td>
+                </tr>
+                <tr>
+                  <td class="defect-num">2</td>
+                  <td class="defect-edge">Scenario honesty</td>
+                  <td>Negative controls beyond the fence removed; error path 1.7 still claims them</td>
+                </tr>
+                <tr>
+                  <td class="defect-num">3</td>
+                  <td class="defect-edge">Record vs. record</td>
+                  <td><code class="code-inline">LIM-0004</code> says tolerance <code class="code-inline">1e-6°</code>, <code class="code-inline">ADR-0005</code> says <code class="code-inline">1e-9°</code></td>
+                </tr>
+                <tr>
+                  <td class="defect-num">4</td>
+                  <td class="defect-edge">Feature vs. feature</td>
+                  <td>MI3 expects <code class="code-inline">GEOFENCE_BREACH</code>, MI2 and <code class="code-inline">ADR-0003</code> say <code class="code-inline">GEOFENCE_VIOLATION</code></td>
+                </tr>
+                <tr>
+                  <td class="defect-num">5</td>
+                  <td class="defect-edge">Binding set</td>
+                  <td>ADR index lists <code class="code-inline">ADR-0005</code> as Proposed, the record says Accepted</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="notes">
+          Ask for a show of hands: who found all five? Who got findings that are not on this list — are they real?
+        </aside>
+      </section>
+
+      <!-- 20 · Exercise 4 · Burn your code · 15 min (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame slide-frame--wide-cmd">
+          <div class="ex-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">EXERCISE 4 OF 4 · PHASE 5: GREEN</p>
+              <h2 class="slide-title">Burn your code</h2>
+            </div>
+            <div class="time-box">
+              <p class="time-label">TIME</p>
+              <p class="time-value">15 min</p>
+            </div>
+          </div>
+          <div class="slide-body slide-body--top">
+            <div class="cmd-panel cmd-panel--wide">
+              <div class="cmd-head">
+                <p class="cmd-label">COMMAND</p>
+                <p class="cmd-note">Replace <code class="code-inline">Python</code> with any language installed</p>
+              </div>
+              <pre class="cmd-pre">make ex4-start</pre>
+              <pre class="cmd-pre cmd-pre--single">agy --model gemini-3.8-flash-high --mode auto -i "$(sed 's/LANGUAGE/Python/g' exercises/ex4-burn-and-rebuild/PROMPT.md)"</pre>
+            </div>
+            <div class="ex-columns">
+              <div class="ex-card">
+                <p class="ex-card-title">GOAL</p>
+                <p><code class="code-inline">make ex4-start</code> deletes all application code — <code class="code-inline">make test-mi1</code> is <span class="status-badge status-badge--dark-red">■ RED</span>. Pick any language installed on your laptop. Python always works.</p>
+              </div>
+              <div class="ex-card ex-card--done">
+                <p class="ex-card-title">✓ DONE WHEN</p>
+                <ul class="ex-list">
+                  <li><code class="code-inline">make test-mi1</code> is <span class="status-badge status-badge--dark-green">▲ GREEN</span> with 28 scenarios</li>
+                  <li>Nothing under <code class="code-inline">governance/</code> or <code class="code-inline">bdd/</code> changed</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 21 · Debrief 4 -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">DEBRIEF · EXERCISE 4</p>
+              <h2 class="slide-title">Debrief 4</h2>
+            </div>
+            <span class="slide-index">21 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="debrief4-grid">
+              <div class="debrief-stack">
+                <div class="debrief-card">
+                  <p class="debrief-label">POLYGLOT CHECK</p>
+                  <p class="debrief-text">Show of hands: which languages turned green?</p>
+                </div>
+                <div class="debrief-card debrief-card--highlight">
+                  <p class="debrief-label">INVARIANT ACROSS LANGUAGES</p>
+                  <p class="debrief-text">Same specification, different code — and the fence rule held in every language.</p>
+                </div>
+              </div>
+              <div class="metric-monolith">
+                <p class="metric-monolith-num">3–7 min</p>
+                <p class="metric-monolith-text">In our dry runs Gemini 3.8 Flash needed 3 to 7 minutes.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 22 · Bonus · Can the tests cheat? (Dark) -->
+      <section class="slide slide--dark" data-background-color="#0b0d12">
+        <div class="slide-frame">
+          <div class="ex-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">BONUS · PHASE 4: HONESTY AUDIT</p>
+              <h2 class="slide-title">Can the tests cheat?</h2>
+            </div>
+            <div class="time-box">
+              <p class="time-label">PHASE</p>
+              <p class="time-value">BONUS</p>
+            </div>
+          </div>
+          <div class="slide-body slide-body--top">
+            <div class="cmd-panel cmd-panel--amber">
+              <div class="cmd-head">
+                <p class="cmd-label">COMMAND</p>
+                <p class="cmd-note">Run <code class="code-inline">make bonus-start</code> first</p>
+              </div>
+              <pre class="cmd-pre">make bonus-start</pre>
+              <pre class="cmd-pre">agy --model gemini-3.8-flash-high --mode auto <span class="nowrap">-i "$(cat exercises/bonus-step-honesty/PROMPT.md)"</span></pre>
+            </div>
+            <div class="ex-columns">
+              <div class="ex-card ex-card--warn">
+                <p class="ex-card-title">◆ THE TRAP</p>
+                <p><code class="code-inline">make bonus-start</code> — <code class="code-inline">make test-mi1</code> turns <span class="status-badge status-badge--dark-green">▲ GREEN</span> although the code knows nothing about the fence.</p>
+              </div>
+              <div class="ex-card">
+                <p class="ex-card-title">CORE PRINCIPLE</p>
+                <p>A green suite means nothing if the steps decide the result themselves.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 23 · Take home -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">SUMMARY</p>
+              <h2 class="slide-title">Take home</h2>
+            </div>
+            <span class="slide-index">23 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="debrief-stack">
+              <div class="takehome-row">
+                <span class="takehome-num">01</span>
+                <p class="takehome-text">ADRs (why), LIMs (where not) and Gherkin (what) form a specification that fits in one context window.</p>
+              </div>
+              <div class="takehome-row">
+                <span class="takehome-num">02</span>
+                <p class="takehome-text">An independent critic audits the specification before the first line of code — every finding becomes a scenario, ADR or LIM.</p>
+              </div>
+              <div class="takehome-row">
+                <span class="takehome-num">03</span>
+                <p class="takehome-text">Black-box steps over independent channels make the implementation replaceable — in any language.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 24 · Going further -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="slide-frame">
+          <div class="slide-header">
+            <div class="slide-header-main">
+              <p class="eyebrow">RESOURCES &amp; NEXT STEPS</p>
+              <h2 class="slide-title">Going further</h2>
+            </div>
+            <span class="slide-index">24 / 25</span>
+          </div>
+          <div class="slide-body">
+            <div class="grid-2x2">
+              <div class="resource-card">
+                <div>
+                  <p class="resource-title">Full five-phase cycle</p>
+                  <p class="resource-detail">Complete walkthrough and instructions</p>
+                </div>
+                <p class="resource-mono">workshop/README.md</p>
+              </div>
+              <div class="resource-card">
+                <div>
+                  <p class="resource-title">Milestones 2–4</p>
+                  <p class="resource-detail">HTTP service, container, live on Cloud Run</p>
+                </div>
+                <p class="resource-mono">EquiGuard roadmap</p>
+              </div>
+              <div class="resource-card">
+                <div>
+                  <p class="resource-title">BDD Guidelines v1.9.0</p>
+                  <p class="resource-detail">Normative specification methodology</p>
+                </div>
+                <p class="resource-mono">BDD_GUIDELINES_v1.9.0_EN.md</p>
+              </div>
+              <div class="resource-card">
+                <div>
+                  <p class="resource-title">Workshop repository</p>
+                  <p class="resource-detail">Slides, exercises, and reference solutions</p>
+                </div>
+                <p class="resource-mono">github.com/scaratec/burn-your-code</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 25 · Thank you -->
+      <section class="slide slide--light" data-background-color="#ffffff">
+        <div class="split-frame">
+          <div class="split-pillar">
+            <div class="pillar-metric">
+              <p class="pillar-number">90 min</p>
+              <p class="pillar-label">Specification-First Engineering</p>
+            </div>
+            <div class="pillar-metric">
+              <p class="pillar-number">5</p>
+              <p class="pillar-label">Phases · one feedback rule</p>
+            </div>
+          </div>
+          <div class="split-stage">
+            <div class="split-top">
+              <p class="eyebrow">BURN YOUR CODE · WRAP-UP</p>
+              <div class="brand-lockup">
+                <img class="brand-emblem" src="marke/scaratec-logo-320.png" alt="SCARATEC emblem">
+                <span class="brand-word">SCARATEC<sup>®</sup></span>
+              </div>
+            </div>
+            <div class="hero-block">
+              <h2 class="hero-title">Thank you</h2>
+              <div class="hero-rule"></div>
+              <p class="hero-subtitle">Randy N. Gupta · Cloud Architect · SCARATEC</p>
+            </div>
+            <div class="split-footer">
+              <span><strong>gupta@scaratec.com</strong> · www.scaratec.com</span>
+              <span>github.com/scaratec/burn-your-code</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="reveal/dist/reveal.js"></script>
+  <script src="reveal/plugin/notes/notes.js"></script>
+  <script>
+    (function () {
+      var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      Reveal.initialize({
+        width: 1920,
+        height: 1080,
+        margin: 0,
+        minScale: 0.2,
+        maxScale: 2.0,
+        center: false,
+        hash: true,
+        controls: true,
+        progress: true,
+        slideNumber: false,
+        showNotes: false,
+        transition: prefersReduced ? "none" : "fade",
+        backgroundTransition: prefersReduced ? "none" : "fade",
+        transitionSpeed: "fast",
+        plugins: [RevealNotes]
+      });
+
+      var video = document.getElementById("rebuild-video");
+      if (video) {
+        function toggleVideo() {
+          if (video.paused) {
+            video.play();
+          } else {
+            video.pause();
+          }
+        }
+        video.addEventListener("click", function (ev) {
+          if (ev.target === video) {
+            // Native controls handle play/pause when clicked; ensure keyboard focus
+            video.focus();
+          }
+        });
+        document.addEventListener("keydown", function (ev) {
+          var current = Reveal.getCurrentSlide();
+          if (!current || !current.contains(video)) {
+            return;
+          }
+          if (ev.key === "Enter" || ev.key === "p" || ev.key === "P") {
+            ev.preventDefault();
+            toggleVideo();
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
