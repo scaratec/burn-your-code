@@ -10,6 +10,9 @@ checks for each one:
   - a participant's edit to a step file and a personal note survive in the backup,
   - the backup is a compressed archive (no plaintext copies agents could grep),
   - `make spec-check` agrees that governance/ and bdd/ match the checkpoint.
+Afterwards it replays participant mistakes found in acceptance reviews (staged
+edits, Unicode file names, edited .gitignore, staged implementations and ADRs,
+own commits) and checks that nothing is lost and nothing survives a reset.
 Your working tree is never touched.
 """
 import re
@@ -80,7 +83,74 @@ def main():
                 problems.append("spec-check reports changes")
             failures += bool(problems)
             print(f"{'FAIL' if problems else 'OK  '} {target:15} {got:22} {'; '.join(problems)}")
+        failures += mistakes(ws)
     sys.exit(1 if failures else 0)
+
+
+def latest_backup(ws):
+    return tarfile.open(sorted((ws / ".workshop-backup").iterdir())[-1])
+
+
+def in_backup(ws, member, text):
+    with latest_backup(ws) as tar:
+        return member in tar.getnames() and text in tar.extractfile(member).read().decode()
+
+
+def mistakes(ws):
+    failures = 0
+
+    def check(name, ok):
+        nonlocal failures
+        failures += not ok
+        print(f"{'OK  ' if ok else 'FAIL'} mistake: {name}")
+
+    git = lambda *a: run(["git", *a], ws)  # noqa: E731
+    make = lambda t: run(["make", "-s", t], ws)  # noqa: E731
+
+    # Staged edit, Unicode file name, file hidden by an edited .gitignore.
+    with open(ws / "README.md", "a") as f:
+        f.write("staged participant edit\n")
+    git("add", "README.md")
+    (ws / "notes").mkdir(exist_ok=True)
+    (ws / "notes" / "résumé.md").write_text("unicode note\n")
+    with open(ws / ".gitignore", "a") as f:
+        f.write("secret.txt\n")
+    (ws / "secret.txt").write_text("ignored note\n")
+    make("workshop-start")
+    check("staged edit backed up and reset", in_backup(ws, "README.md", "staged participant edit")
+          and "staged participant edit" not in (ws / "README.md").read_text())
+    check("Unicode file backed up and removed", in_backup(ws, "notes/résumé.md", "unicode note")
+          and not (ws / "notes").exists())
+    check("file hidden by own .gitignore backed up and removed", in_backup(ws, "secret.txt", "ignored note")
+          and not (ws / "secret.txt").exists())
+
+    # A staged implementation must not survive ex4-start.
+    make("ex4-solution")
+    git("add", "-f", "app", "build.sh")
+    make("ex4-start")
+    test = run(["make", "-s", "test-mi1"], ws)
+    check("staged implementation burned by ex4-start", not (ws / "app").exists() and not (ws / "build.sh").exists()
+          and "RED: Executable" in test.stdout + test.stderr)
+
+    # A staged, differently named ADR must not survive ex3-start.
+    (ws / "governance" / "adr" / "0005-participant-outside.md").write_text("# outside\n")
+    git("add", "governance/adr/0005-participant-outside.md")
+    make("ex3-start")
+    check("staged own ADR backed up and removed by ex3-start",
+          not (ws / "governance" / "adr" / "0005-participant-outside.md").exists()
+          and in_backup(ws, "governance/adr/0005-participant-outside.md", "outside"))
+
+    # Own commits stay in git, but checkpoints restore the published material.
+    (ws / "governance" / "adr" / "0099-own.md").write_text("# own\n")
+    git("add", "governance/adr/0099-own.md")
+    git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "own work")
+    make("workshop-start")
+    test = run(["make", "-s", "test-mi1"], ws)
+    check("own commit kept in git, published state restored",
+          not (ws / "governance" / "adr" / "0099-own.md").exists()
+          and "own work" in git("log", "-1", "--format=%s").stdout
+          and "16 scenarios passed, 0 failed" in test.stdout + test.stderr)
+    return failures
 
 
 if __name__ == "__main__":

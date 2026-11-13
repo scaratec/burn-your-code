@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Checkpoints for the 90-minute workshop (exercises/README.md).
 
-Every checkpoint resets workshop/ to a defined state. Before it changes
-anything, it packs everything you wrote (specification, code, notes) into
-.workshop-backup/<time>-<checkpoint>.tar.gz, so nothing is lost.
+Every checkpoint resets workshop/ to a defined state: the published workshop
+material (the commit your branch was cloned from, even if you committed on top)
+plus the files of that checkpoint. Before it changes anything, it packs
+everything you wrote or changed (specification, code, notes, staged or not)
+into .workshop-backup/<time>-<checkpoint>.tar.gz and checks the archive.
 
-  workshop-start   reference specification from git HEAD + baseline MI1 executable
+  workshop-start   published specification + baseline MI1 executable
   ex1-start        same as workshop-start
   ex1-solution     + ADR-0005 and LIM-0004 (points on the fence count as inside)
   ex2-start        same as ex1-solution
@@ -22,6 +24,8 @@ anything, it packs everything you wrote (specification, code, notes) into
 import datetime
 import hashlib
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -37,42 +41,89 @@ BACKUP = ROOT / ".workshop-backup"
 MANIFEST = ROOT / ".workshop-spec.json"
 SPEC = ["governance", "bdd"]
 GIT_APP = ["cmd", "internal", "go.mod", "go.sum", "Dockerfile"]
-# Ignored by git, so `git clean` keeps them; checkpoints handle them explicitly.
-IGNORED_APP = ["bin", ".burned"]
-NOT_BACKED_UP = ("node_modules/", "target/", "__pycache__/", ".venv/", ".workshop-backup/")
+APP_OUTPUTS = ["app", "src", "build.sh", "bin", ".burned"] + GIT_APP
+# Never backed up and never deleted: environments, caches, earlier backups, Terraform state.
+KEEP_DIRS = {".git", ".venv", ".workshop-backup", "node_modules", "target", "__pycache__"}
+KEEP_PREFIXES = ("terraform/.terraform/", "terraform/terraform.tfstate")
 
 
 def say(msg):
     print(f"[workshop] {msg}")
 
 
-def git_out(*args):
-    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+def fail(msg):
+    sys.exit(f"[workshop] {msg}\n[workshop] Nothing was deleted. Earlier backups are in .workshop-backup/.")
+
+
+def git_z(*args):
+    """Run git and return its NUL-separated output as a list (safe for any file name)."""
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True)
     if result.returncode != 0:
-        sys.exit(f"[workshop] git {' '.join(args)} failed:\n{result.stderr.strip()}\n"
-                 "[workshop] Nothing was deleted. Earlier backups are in .workshop-backup/.")
-    return result.stdout
+        fail(f"git {' '.join(args)} failed:\n{result.stderr.decode(errors='replace').strip()}")
+    return [p.decode() for p in result.stdout.split(b"\0") if p]
 
 
 def git(*args):
-    git_out(*args)
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    if result.returncode != 0:
+        fail(f"git {' '.join(args)} failed:\n{result.stderr.strip()}")
+    return result.stdout.strip()
 
 
-def untracked():
-    """Files git does not know and does not ignore (paths relative to workshop/)."""
-    return [p for p in git_out("ls-files", "--others", "--exclude-standard").splitlines()
-            if not p.startswith(NOT_BACKED_UP)]
+_REF = None
+
+
+def reference():
+    """The published state checkpoints restore: the fork point from the upstream branch, else HEAD.
+
+    Participants who commit their own work keep it in git; checkpoints still restore the workshop material.
+    """
+    global _REF
+    if _REF is None:
+        up = subprocess.run(["git", "merge-base", "HEAD", "@{upstream}"], cwd=ROOT, capture_output=True, text=True)
+        _REF = up.stdout.strip() if up.returncode == 0 and up.stdout.strip() else git("rev-parse", "HEAD")
+    return _REF
+
+
+def reference_files():
+    prefix = git("rev-parse", "--show-prefix").rstrip("/")
+    tree = f"{reference()}:{prefix}" if prefix else reference()
+    files = set(git_z("ls-tree", "-r", "--name-only", "-z", "--full-tree", tree))
+    if "AGENTS.md" not in files or "scripts/checkpoint.py" not in files:
+        fail(f"cannot read the published workshop files from git ({tree}).")
+    return files
+
+
+def kept(rel):
+    return rel.startswith(KEEP_PREFIXES)
+
+
+def disk_files():
+    files = set()
+    for dirpath, dirnames, filenames in os.walk(ROOT):
+        dirnames[:] = [d for d in dirnames if d not in KEEP_DIRS]
+        for name in filenames + [d for d in dirnames if os.path.islink(os.path.join(dirpath, d))]:
+            rel = os.path.relpath(os.path.join(dirpath, name), ROOT)
+            if not kept(rel):
+                files.add(rel)
+    return files
+
+
+def extra_files():
+    """Everything on disk that is not part of the published workshop (staged, untracked or ignored)."""
+    return disk_files() - reference_files()
+
+
+def changed_files():
+    """Published files whose content differs from the reference (staged or not)."""
+    return {p for p in git_z("diff", "-z", "--name-only", "--relative", reference())
+            if os.path.lexists(ROOT / p)}
 
 
 def backup(label):
-    files = set(git_out("ls-files", "--modified").splitlines()) | set(untracked())
-    for name in SPEC + IGNORED_APP:
-        path = ROOT / name
-        if path.is_file():
-            files.add(name)
-        elif path.is_dir():
-            files.update(str(p.relative_to(ROOT)) for p in path.rglob("*") if p.is_file())
-    files = sorted(f for f in files if (ROOT / f).is_file() and "/__pycache__/" not in f"/{f}")
+    files = changed_files() | extra_files()
+    files |= {f for f in disk_files() if f.split("/", 1)[0] in SPEC}
+    files = sorted(f for f in files if os.path.isfile(ROOT / f) or os.path.islink(ROOT / f))
     if not files:
         return
     BACKUP.mkdir(exist_ok=True)
@@ -85,6 +136,9 @@ def backup(label):
     with tarfile.open(target, "x:gz") as tar:
         for f in files:
             tar.add(ROOT / f, arcname=f, recursive=False)
+    with tarfile.open(target, "r:gz") as tar:
+        if sorted(tar.getnames()) != files:
+            fail(f"the backup {target.name} is incomplete; stopping before anything is changed.")
     rel = target.relative_to(ROOT)
     say(f"Backed up your files to {rel}")
     say(f"  list: tar -tzf {rel}   restore a file: tar -xzf {rel} <path>")
@@ -93,22 +147,32 @@ def backup(label):
 def remove(name):
     path = ROOT / name
     if path.is_dir() and not path.is_symlink():
-        import shutil
         shutil.rmtree(path)
-    elif path.exists() or path.is_symlink():
+    elif os.path.lexists(path):
         path.unlink()
 
 
+def remove_empty_dirs():
+    for dirpath, dirnames, filenames in os.walk(ROOT, topdown=False):
+        rel = os.path.relpath(dirpath, ROOT)
+        if rel == "." or set(Path(rel).parts) & KEEP_DIRS or kept(rel + "/"):
+            continue
+        if not os.listdir(dirpath):
+            os.rmdir(dirpath)
+
+
 def reset_workspace():
-    """Every tracked file back to git HEAD, everything else in workshop/ removed (it is in the backup)."""
-    extra = [p for p in untracked() if not p.startswith(tuple(f"{s}/" for s in SPEC))]
+    """workshop/ back to the published state; everything else removed (it is in the backup)."""
+    extra = sorted(extra_files())
     # Restore first and only then delete: if git fails, nothing has been deleted.
-    git("checkout", "HEAD", "--", ".")
-    git("clean", "-fdq", "--", ".")
-    for name in IGNORED_APP:
-        remove(name)
-    if extra:
-        shown = ", ".join(extra[:5]) + (f" and {len(extra) - 5} more" if len(extra) > 5 else "")
+    git("reset", "-q", "--", ".")
+    git("checkout", reference(), "--", ".")
+    for rel in extra:
+        remove(rel)
+    remove_empty_dirs()
+    visible = [p for p in extra if p.split("/", 1)[0] not in SPEC + ["bin"] and p not in (".burned", MANIFEST.name)]
+    if visible:
+        shown = ", ".join(visible[:5]) + (f" and {len(visible) - 5} more" if len(visible) > 5 else "")
         say(f"Removed files that are not part of the workshop (they are in the backup): {shown}")
 
 
@@ -147,9 +211,12 @@ def baseline_app():
 
 
 def burn_app():
-    for name in GIT_APP + IGNORED_APP:
+    for name in APP_OUTPUTS:
         remove(name)
     (ROOT / ".burned").touch()
+    left = [name for name in APP_OUTPUTS if name != ".burned" and os.path.lexists(ROOT / name)]
+    if left:
+        sys.exit(f"[workshop] could not burn {', '.join(left)}; remove them by hand and run the checkpoint again.")
 
 
 def state_start():
