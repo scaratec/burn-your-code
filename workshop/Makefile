@@ -3,7 +3,7 @@
 # automatically. Local targets (test-mi1, test-mi2, test-mi3) never
 # evaluate PROJECT and are not affected.
 PROJECT    := $(shell awk -F'|' '/\| *project_id *\|/{gsub(/ /,"",$$3); print $$3; exit}' \
-                bdd/mi4_cloud_run.feature)
+                bdd/mi4_cloud_run.feature 2>/dev/null)
 
 REGISTRY   := europe-west3-docker.pkg.dev
 REPO       := equiguard
@@ -29,6 +29,7 @@ EMULATOR_FIRESTORE_PID  := $(EMULATOR_FIRESTORE_DIR)/firestore.pid
 .PHONY: help setup setup-python build build-image \
         start-emulators stop-emulators \
         test-mi1 test-mi2 test-mi3 test-mi4 test-all \
+        phase1-start checkpoint-adrs checkpoint-features checkpoint-steps burn restore-all \
         auth-registry push-image \
         tf-init tf-apply teardown-mi4 \
         clean
@@ -40,58 +41,123 @@ EMULATOR_FIRESTORE_PID  := $(EMULATOR_FIRESTORE_DIR)/firestore.pid
 help:
 	@echo "Usage: make [target]"
 	@echo ""
-	@echo "Local targets:"
-	@echo "  setup            Install Python deps + resolve Go modules"
-	@echo "  setup-python     Install Python deps only (used by test-mi4)"
-	@echo "  build            Compile Go binaries into bin/"
-	@echo "  build-image      Build the geofence-processor Docker image"
-	@echo "  start-emulators  Start Firestore (npx) + Pub/Sub (Docker) emulators"
-	@echo "  stop-emulators   Stop and remove emulators"
-	@echo "  test-mi1         Geofence Library (no infra needed)"
-	@echo "  test-mi2         Processor Service (emulators managed automatically)"
-	@echo "  test-mi3         OCI Image (emulators + Docker)"
-	@echo "  test-all         Run MI1 + MI2 + MI3"
+	@echo "Workshop Phase & Checkpoint targets:"
+	@echo "  phase1-start         Reset to blank template for Phase 1 (ADR dialogue with agy)"
+	@echo "  checkpoint-adrs      Restore reference ADRs & LIMs (ready for Phase 2: Features)"
+	@echo "  checkpoint-features  Restore reference ADRs, LIMs & Features (ready for Phase 3/4: Critic & Steps)"
+	@echo "  burn                 Keep full Spec + Steps, delete all app code (ready for Phase 5: Polyglot Build)"
+	@echo "  restore-all          Restore complete reference workspace including Go implementation"
+	@echo ""
+	@echo "Local Build & BDD targets (Language-Neutral):"
+	@echo "  setup                Install Python BDD venv (+ resolve language deps if present)"
+	@echo "  build                Build ./bin/geofence-lib-test and ./bin/geofence-processor (any language)"
+	@echo "  build-image          Build the geofence-processor OCI image ($(LOCAL_TAG))"
+	@echo "  start-emulators      Start Firestore (npx) + Pub/Sub (Docker) emulators"
+	@echo "  stop-emulators       Stop and remove emulators"
+	@echo "  test-mi1             Milestone 1: Geofence Library CLI (no infra needed)"
+	@echo "  test-mi2             Milestone 2: Processor Service (emulators managed automatically)"
+	@echo "  test-mi3             Milestone 3: OCI Container Image (emulators + Docker)"
+	@echo "  test-all             Run MI1 + MI2 + MI3"
 	@echo ""
 	@echo "Cloud targets (MI4 — real GCP, incurs costs):"
 	@echo "  Project ID is read from bdd/mi4_cloud_run.feature (project_id row)."
-	@echo "  Change it there once — Makefile, Terraform, and Docker follow."
-	@echo ""
-	@echo "  auth-registry    Configure Docker for Artifact Registry"
-	@echo "  push-image       Tag and push image to Artifact Registry"
-	@echo "  tf-init          Initialize Terraform"
-	@echo "  tf-apply         Provision all GCP resources via Terraform"
-	@echo "  test-mi4         Run MI4 BDD tests against live Cloud Run"
-	@echo "  teardown-mi4     Destroy all GCP resources (stops billing)"
-	@echo ""
-	@echo "  clean            Remove compiled binaries"
+	@echo "  auth-registry        Configure Docker for Artifact Registry"
+	@echo "  push-image           Tag and push image to Artifact Registry"
+	@echo "  tf-init              Initialize Terraform"
+	@echo "  tf-apply             Provision all GCP resources via Terraform"
+	@echo "  test-mi4             Run MI4 BDD tests against live Cloud Run"
+	@echo "  teardown-mi4         Destroy all GCP resources (stops billing)"
+	@echo "  clean                Remove compiled binaries"
 
 # ---------------------------------------------------------------------------
-# Local setup
+# Local setup & polyglot build (ADR-0004)
 # ---------------------------------------------------------------------------
 
 setup-python:
-	@echo "Setting up Python virtual environment..."
-	python3 -m venv .venv
-	@bash -c "source .venv/bin/activate && \
-		pip install -q -r requirements.txt"
+	@if [ ! -x .venv/bin/behave ] || ! .venv/bin/python3 -m pip --version >/dev/null 2>&1; then \
+		echo "Setting up Python virtual environment (.venv)..."; \
+		rm -rf .venv; \
+		python3 -m venv .venv; \
+		.venv/bin/pip install -q -r requirements.txt; \
+	fi
 
 setup: setup-python
-	@echo "Go binary: $(GO)"
-	@$(GO) version
-	@echo "Resolving Go module dependencies..."
-	$(GO) mod tidy
 	@mkdir -p bin
+	@if [ -f go.mod ]; then \
+		echo "Go module detected ($(GO)) — running go mod tidy..."; \
+		$(GO) mod tidy; \
+	fi
 
 build: setup
-	@echo "Building Go binaries..."
-	$(GO) build -o bin/geofence-processor ./cmd/geofence-processor/
-	$(GO) build -o bin/geofence-lib-test  ./cmd/geofence-lib-test/
-	@echo "Build complete."
+	@mkdir -p bin
+	@if [ -f ./build.sh ]; then \
+		echo "Running custom ./build.sh..."; \
+		bash ./build.sh; \
+		chmod +x bin/geofence-lib-test bin/geofence-processor 2>/dev/null || true; \
+	elif [ -f go.mod ]; then \
+		echo "Building Go binaries into bin/..."; \
+		$(GO) build -o bin/geofence-processor ./cmd/geofence-processor/; \
+		$(GO) build -o bin/geofence-lib-test  ./cmd/geofence-lib-test/; \
+	elif [ -f Cargo.toml ]; then \
+		echo "Building Rust binaries into bin/..."; \
+		cargo build --release; \
+		cp target/release/geofence-processor bin/ 2>/dev/null || true; \
+		cp target/release/geofence-lib-test  bin/ 2>/dev/null || true; \
+	elif [ -f bin/geofence-lib-test ] || [ -f bin/geofence-processor ]; then \
+		echo "Using existing executables in bin/ (ensuring +x permissions)..."; \
+		chmod +x bin/geofence-lib-test bin/geofence-processor 2>/dev/null || true; \
+	else \
+		echo "No application implementation found yet (RED specification mode)."; \
+	fi
 
 build-image:
-	@echo "Building Docker image $(LOCAL_TAG)..."
-	docker build -t $(LOCAL_TAG) .
-	@echo "Image built."
+	@if [ -f Dockerfile ]; then \
+		echo "Building Docker image $(LOCAL_TAG)..."; \
+		docker build -t $(LOCAL_TAG) .; \
+	else \
+		echo "No Dockerfile found yet (RED specification mode)."; \
+	fi
+
+# ---------------------------------------------------------------------------
+# Workshop Phase Checkpoints
+# ---------------------------------------------------------------------------
+
+BURN_PATHS := cmd/ internal/ go.mod go.sum Dockerfile bin/ src/ app/ lib/ \
+              package.json package-lock.json tsconfig.json node_modules/ dist/ \
+              Cargo.toml Cargo.lock target/ pyproject.toml build.sh
+
+phase1-start: clean
+	@echo "Resetting workspace for Phase 1 (Architecture Dialogue)..."
+	rm -rf $(BURN_PATHS)
+	rm -f governance/adr/000[1-9]*.md governance/limitations/000*.md
+	rm -f bdd/00_error_path_enumeration.md bdd/mi*.feature
+	rm -f bdd/steps/geofence_steps.py bdd/steps/processor_steps.py bdd/steps/image_steps.py bdd/steps/cloud_steps.py
+	@echo "Ready for Phase 1. Start Antigravity CLI with prompts/01-architecture-dialogue.md"
+
+checkpoint-adrs:
+	@echo "Restoring reference ADRs and LIMs (Phase 1 complete -> ready for Phase 2)..."
+	git checkout HEAD -- governance/
+	@echo "Reference ADRs (0000-0004) and LIMs (0001-0002) restored in governance/."
+
+checkpoint-features: checkpoint-adrs
+	@echo "Restoring reference Error Path Enumeration and Feature Files (Phase 2/3 complete -> ready for Phase 4)..."
+	git checkout HEAD -- bdd/00_error_path_enumeration.md bdd/mi1_geofence_library.feature bdd/mi2_geofence_processor.feature bdd/mi3_geofence_processor_image.feature bdd/mi4_cloud_run.feature
+	@echo "Reference Feature Files restored in bdd/."
+
+checkpoint-steps: checkpoint-features
+	@echo "Restoring reference Step Definitions and burning application code (Phase 4 complete -> ready for Phase 5)..."
+	git checkout HEAD -- bdd/steps/ bdd/environment.py
+	rm -rf $(BURN_PATHS)
+	@echo "Specification and Steps ready (RED). Application code removed."
+	@echo "Run 'make test-mi1' to verify RED state, then use prompts/05-autonomous-implementation.md!"
+
+burn: checkpoint-steps
+
+restore-all:
+	@echo "Restoring complete reference workspace (Spec + Steps + Go implementation)..."
+	rm -rf $(BURN_PATHS)
+	git checkout HEAD -- governance/ bdd/ cmd/ internal/ go.mod go.sum Dockerfile Makefile
+	@echo "Workspace restored."
 
 # ---------------------------------------------------------------------------
 # Emulator lifecycle
@@ -145,7 +211,7 @@ test-mi2: build start-emulators
 	@bash -c "source .venv/bin/activate && behave bdd/ --tags=@mi2"; \
 	 status=$$?; $(MAKE) --no-print-directory stop-emulators; exit $$status
 
-test-mi3: build-image start-emulators
+test-mi3: build build-image start-emulators
 	@echo "=== Milestone 3: OCI Image ==="
 	@bash -c "source .venv/bin/activate && behave bdd/ --tags=@mi3"; \
 	 status=$$?; $(MAKE) --no-print-directory stop-emulators; exit $$status
@@ -163,7 +229,7 @@ auth-registry:
 	@echo "Configuring Docker authentication for Artifact Registry..."
 	gcloud auth configure-docker $(REGISTRY) --quiet
 
-push-image: build-image auth-registry
+push-image: build build-image auth-registry
 	@echo "Tagging $(LOCAL_TAG) → $(REMOTE_TAG)"
 	docker tag $(LOCAL_TAG) $(REMOTE_TAG)
 	@echo "Pushing $(REMOTE_TAG)..."

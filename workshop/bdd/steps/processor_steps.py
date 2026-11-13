@@ -13,7 +13,7 @@ def step_given_processor_config(context):
     for row in context.table:
         config[row["key"]] = row["value"]
     
-    # Set environment variables for the Go app
+    # Set environment variables for the service process (ADR-0002, ADR-0004)
     env = os.environ.copy()
     env["FIRESTORE_EMULATOR_HOST"] = config["firestore-emulator-host"]
     env["PUBSUB_EMULATOR_HOST"] = config.get("pubsub-emulator-host", "")
@@ -30,8 +30,14 @@ def step_given_processor_config(context):
     # Create firestore client for the test
     context.db = firestore.Client(project=context.project_id)
 
-    # Start the pre-built Go binary (built by `make build` before test-mi2)
-    context.processor_process = subprocess.Popen(["./bin/geofence-processor"], env=env)
+    # Start the language-neutral service executable (built by `make build` before test-mi2)
+    exe = "./bin/geofence-processor"
+    if not (os.path.isfile(exe) and os.access(exe, os.X_OK)):
+        raise AssertionError(
+            "RED: Executable './bin/geofence-processor' not found or not executable. "
+            "Implement the HTTP service contract to turn this scenario GREEN."
+        )
+    context.processor_process = subprocess.Popen([exe], env=env)
 
     # Poll health endpoint until ready (Guideline 6.4 — no fixed sleeps)
     deadline = time.time() + 10.0

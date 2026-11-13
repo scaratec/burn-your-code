@@ -11,6 +11,11 @@ from google.cloud import firestore
 
 @given('the geofence-processor image is built from "{context_path}" with tag "{tag}"')
 def step_build_image(context, context_path, tag):
+    dockerfile = os.path.join(context_path, "Dockerfile")
+    if not os.path.isfile(dockerfile):
+        raise AssertionError(
+            f"RED: '{dockerfile}' not found. Provide a Dockerfile for the service to turn this scenario GREEN."
+        )
     result = subprocess.run(
         ["docker", "build", "-t", tag, context_path],
         capture_output=True,

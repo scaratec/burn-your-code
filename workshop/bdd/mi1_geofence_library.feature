@@ -1,3 +1,5 @@
+# Source: ADR-0001 (Point-in-polygon ray casting), ADR-0004 (MI1 CLI contract), LIM-0001 (Single polygon per pasture)
+# Independent Channel: CLI process stdout JSON (`./bin/geofence-lib-test`)
 @library @geofence @mi1
 Feature: Geofence Library Validation
   As a core component of the EquiGuard system

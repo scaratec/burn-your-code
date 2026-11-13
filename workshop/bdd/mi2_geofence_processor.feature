@@ -1,3 +1,5 @@
+# Source: ADR-0001 (Ray casting), ADR-0002 (Pub/Sub push HTTP endpoint), ADR-0003 (Firestore schema), ADR-0004 (MI2 process harness), LIM-0002 (Stateless per-ping evaluation)
+# Independent Channel: Firestore Emulator (`localhost:8082`, collections `geofences` and `alerts`)
 @processor @infrastructure @mi2
 Feature: Geofence Processor Service (Service B)
   As the core alerting component of the EquiGuard system

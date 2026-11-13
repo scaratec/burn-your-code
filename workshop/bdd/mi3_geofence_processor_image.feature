@@ -1,3 +1,5 @@
+# Source: ADR-0002 (HTTP endpoints & 400 validation), ADR-0003 (Firestore schema), ADR-0004 (MI3 OCI container harness), LIM-0002 (Stateless evaluation)
+# Independent Channel: Firestore Emulator (`localhost:8082`), HTTP `GET /health`, and container socket inspection
 @image @infrastructure @mi3
 Feature: Geofence Processor OCI Image
   As a production deployment of the EquiGuard system

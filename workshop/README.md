@@ -1,291 +1,193 @@
-# Workshop: EquiGuard – AI-Driven Geofencing & Event-Driven Architecture
+# Hands-On Workshop: EquiGuard — Specification-First Engineering with Antigravity CLI, Gemini & Google Cloud
 
-## About the Project
+## Goal of the Workshop
 
-This project is the hands-on workshop for the presentation
-**"Burn Your Code: Feature Files as the Ultimate AI Agent Prompt"**.
-We build a high-precision, event-driven geofencing system on Google Cloud
-where the entire business logic and infrastructure configuration are driven
-exclusively by **Gherkin Feature Files**.
+In this workshop, you will build **EquiGuard** — a real-time, event-driven GPS pasture monitoring system on Google Cloud — without writing a single line of application code by hand.
 
-### The Case: "EquiGuard"
+Instead of "Vibe Coding" (ad-hoc chat prompting that builds a fragile house of cards), you will use **Antigravity CLI (`agy`)** and **Gemini** to engineer a **complete, self-verifying specification triad**:
 
-We monitor a fictional pasture somewhere in Lower Saxony. Using GPS telemetry,
-the system determines in real-time whether horses (e.g., Lilly or Honey) have
-left the predefined geofence. The polygon coordinates, horse names, and
-project IDs in this workshop are intentional decoy data — picked at random
-from Google Maps so the workshop ships with realistic-looking values without
-exposing real-world locations.
+1. **ADRs (`governance/adr/`)** — *Why* the system is built this way.
+2. **LIMs (`governance/limitations/`)** — *Where* V1 knowingly accepts bounded shortcuts.
+3. **Gherkin Feature Files (`bdd/*.feature`) & Black-Box Steps (`bdd/steps/`)** — *What* the system does observably from the outside.
+
+Once your specification passes the **Specification Critic (`bdd-critic`)** and your black-box test suite is **cleanly RED**, you will pick **any programming language you like** (Go, Python, Rust, TypeScript, Java…) and watch **Gemini** generate the entire service autonomously until every milestone is **GREEN** — locally and live on **Google Cloud Run**.
 
 ---
 
-## Architecture
+## The Use Case: "EquiGuard"
 
-The system follows **Ports & Adapters (Hexagonal Architecture)**:
+We monitor horse pastures using GPS collar telemetry. Whenever a horse (e.g., *Lilly* or *Honey*) sends a GPS ping, EquiGuard determines via ray casting whether the coordinate lies inside or outside the assigned pasture polygon (`HomePasture` or `ComplexPasture`) and writes a `GEOFENCE_VIOLATION` alert to Firestore when a horse leaves the pasture.
 
-```
+*(Note: Polygon coordinates, horse names, and project IDs in this workshop are intentional decoy data picked from Google Maps so the workshop ships with realistic values without exposing real-world locations.)*
+
+```text
 GPS Telemetry
      │
      ▼
 Pub/Sub Topic (equiguard-telemetry)
      │
-     ▼ push subscription
+     ▼ push subscription (POST /telemetry-push)
 Cloud Run: geofence-processor
      │  reads geofence polygon
-     ├──────────────────────► Firestore (geofences/)
+     ├──────────────────────► Firestore (geofences/<zone>)
      │  writes alert on violation
-     └──────────────────────► Firestore (alerts/)
+     └──────────────────────► Firestore (alerts/<doc>)
 ```
 
 ---
 
-## The Real Exercise: Burn the Code
+## The Five Development Phases
 
-The feature files and step code are the specification. The Go implementation
-is just one possible answer.
+We follow the exact 5-phase engineering cycle from the slides ([`AGENTS.md`](AGENTS.md) & [BDD Guidelines v1.9.0](../BDD_GUIDELINES_v1.9.0_EN.md)):
 
-**The actual workshop exercise is this:**
+```text
+  Phase 1: Dialogue & ADRs/LIMs   →  governance/adr/ + governance/limitations/  (WHY / WHERE NOT)
+  Phase 2: Error Paths & Features →  bdd/00_error_path_enumeration.md + *.feature (WHAT — RED)
+  Phase 3: Specification Critic   →  Whole-picture review of Phases 1 + 2       (AUDITED)
+  Phase 4: Steps & Honesty Audit  →  bdd/steps/*_steps.py + §13 Step Audit      (STILL RED)
+  Phase 5: Code & Cloud Rollout   →  Autonomous build in ANY language + GCP MI4 (GREEN)
+```
 
-1. Delete the implementation — everything that is *not* a feature file or
-   step file:
-   ```bash
-   rm -rf cmd/ internal/ go.mod go.sum Dockerfile
-   ```
-2. Open your AI agent of choice (Claude Code, Copilot, Cursor, …).
-3. Point it at the `bdd/` directory and say:
-   > "Implement a service that makes these BDD scenarios pass.
-   > Use \<your language of choice\>."
-4. Run the milestones and iterate until they are green.
-
-The point of the exercise: **the feature files fully define the system**.
-The language, the framework, and the runtime are details the agent decides.
-If the tests pass, the system is correct — regardless of what the
-implementation looks like.
-
-**Challenge:** The step code and Makefile are written with Go in mind —
-MI1 calls a compiled binary via subprocess with specific CLI flags, and
-`make build` runs `go build`. This is part of the exercise: the agent
-must read the step files as an additional specification layer and adapt
-the build tooling accordingly. Claude Code, Gemini CLI, and Codex handle
-this well. Give it a try.
+> **The Feedback Loop Rule:** Whatever the Critic (Phase 3), the Step Audit (Phase 4), or Reality (Phase 5) finds modifies the **ADR, LIM, or Feature File first** — never directly the application code.
 
 ---
 
-## Setup
+## Quick Prerequisites & Setup
 
 ```bash
+# Install Python BDD virtual environment (.venv)
 make setup
 ```
 
-This single command:
-1. Creates a Python virtual environment (`.venv/`)
-2. Installs all Python dependencies from `requirements.txt` with **pinned
-   versions** — every participant gets the exact same library stack
-3. Resolves Go module dependencies (`go mod tidy`)
-4. Creates the `bin/` directory for compiled binaries
+### Phase Checkpoints (Jump In Anywhere!)
 
-`make test-mi4` uses `make setup-python` instead of `make setup` — it
-only installs Python dependencies because MI4 does not need Go binaries.
+This repository includes checkpoint targets in the `Makefile` so you can start from scratch at Phase 1 **or** fast-forward to any phase if time gets tight during the workshop:
 
-### Upgrading Python dependencies
-
-Dependencies are pinned in `requirements.txt` at the patch level. To upgrade:
-
-```bash
-# Edit requirements.txt with new version pins, then:
-make setup
-make test-all   # verify all local milestones still pass
-# commit requirements.txt
-```
-
-For a fully locked environment including all transitive dependencies:
-
-```bash
-pip install pip-tools
-pip-compile requirements.txt -o requirements.lock.txt
-```
-
----
-
-## Milestones
-
-The workshop is structured in four milestones of increasing complexity.
-Each milestone uses the same Gherkin feature files — only the execution
-environment changes.
-
-### MI1 — Geofence Library (`@mi1`)
-
-Tests the core point-in-polygon algorithm in isolation. No network, no
-services. The Python step code calls a Go CLI wrapper via subprocess.
-
-```bash
-make test-mi1
-```
-
-Requirements: Go 1.22+, Python 3.11+
-
----
-
-### MI2 — Geofence Processor with Emulators (`@mi2`)
-
-Tests the full HTTP service locally using the **Firestore emulator** and
-**Pub/Sub emulator**. Emulators are started and stopped automatically.
-
-```bash
-make test-mi2
-```
-
-`make test-mi2` starts both emulators, runs the scenarios, and stops
-everything — even on failure.
-
-To manage emulators manually:
-
-```bash
-make start-emulators   # Firestore on :8082 (npx firebase-tools), Pub/Sub on :8085 (Docker)
-make stop-emulators    # stop and remove all emulators
-```
-
-**Emulator requirements:**
-- Firestore: Node.js 18+ with `npx`. The Makefile pins
-  `firebase-tools@15.11.0` — the JAR is downloaded on first run and
-  cached by npx. Pinning the version guarantees the same emulator
-  behaviour across all workshop runs.
-- Pub/Sub: Docker + `gcr.io/google.com/cloudsdktool/cloud-sdk:latest`
-
-Requirements: MI1 + Node.js 18+ + Docker
-
----
-
-### MI3 — OCI Image (`@mi3`)
-
-Builds the geofence-processor Docker image and tests it as a running
-container. Validates health check, port binding, and full behavioural
-equivalence with MI2.
-
-```bash
-make test-mi3
-```
-
-Requirements: MI2 + Docker
-
----
-
-### MI4 — Cloud Run on Live GCP (`@mi4`)
-
-> **⚠ WARNING: This milestone uses real GCP resources and incurs costs.**
-> It is intended for use with Google Cloud credits provided for this workshop.
-> Always run `make teardown-mi4` after the session to stop billing.
-
-This is where it gets real. The same Gherkin scenarios that passed locally
-in MI1–MI3 now run against a live Cloud Run service, real Firestore, and
-real Pub/Sub — without changing a single line of the feature file.
-
-#### Participant setup — one edit required
-
-Open `bdd/mi4_cloud_run.feature` and change the `project_id` value in
-the Background table to your GCP project ID. That is the **only file
-you need to edit**: the Makefile reads `project_id` from there via
-`awk` and derives the Artifact Registry image URL and all Terraform
-`-var` flags automatically. No other configuration file is touched.
-
-#### Prerequisites
-
-| Requirement | How to verify |
+| Command | What It Prepares |
 |---|---|
-| GCP project with billing enabled | `gcloud projects describe <project_id>` |
-| Application Default Credentials | `gcloud auth application-default login` |
-| Terraform ≥ 1.7 | `terraform version` |
-| Docker authenticated for Artifact Registry | `make auth-registry` |
-
-#### Required GCP APIs
-
-The following APIs must be enabled (Terraform handles this automatically):
-
-- `run.googleapis.com`
-- `pubsub.googleapis.com`
-- `firestore.googleapis.com`
-- `artifactregistry.googleapis.com`
-
-#### Step-by-Step
-
-```bash
-# 1. Provision all GCP resources and deploy the image in one step:
-#    - Phase 1: creates the Artifact Registry repository
-#    - pushes the container image
-#    - Phase 2: deploys Cloud Run, Pub/Sub topic + push subscription
-make tf-apply
-
-# 2. Run the MI4 BDD tests against the live service
-make test-mi4
-```
-
-`make test-mi4` performs two preflight checks before launching Behave:
-
-1. **Terraform outputs** — verifies that `terraform output cloud_run_url`
-   succeeds. If not, the run is aborted with the message
-   `Run 'make tf-apply' before 'make test-mi4'`.
-2. **gcloud credentials** — verifies that `gcloud auth print-identity-token`
-   succeeds. If not, the run is aborted with the instruction
-   `Run: gcloud auth application-default login`.
-
-> **Design note:** The Gherkin step `And the infrastructure is provisioned
-> with Terraform` reads Terraform outputs only — it does **not** run
-> `terraform apply`. Provisioning is a deployment concern handled by
-> `make tf-apply`; a Given step describes world state, it does not change it.
-
-#### What Terraform provisions
-
-| Resource | Name | Description |
-|---|---|---|
-| Artifact Registry | `equiguard` | Docker repository for container images |
-| Cloud Run | `geofence-processor` | HTTP service, region `europe-west3` |
-| Pub/Sub Topic | `equiguard-telemetry` | Receives GPS telemetry events |
-| Pub/Sub Subscription | `equiguard-telemetry-push-sub` | Push → Cloud Run `/telemetry-push` |
-
-All values are defined in `terraform/terraform.tfvars` and mirrored in the
-Gherkin Background table — no magic values anywhere.
-
-#### Terraform state
-
-By default Terraform stores state locally in `terraform/terraform.tfstate`
-(excluded from version control). This works fine for a single operator.
-
-For **team use**, configure a shared GCS backend so all members operate on
-the same state file. Instructions are in the commented `backend "gcs"` block
-at the top of `terraform/main.tf`.
-
-The provider lock file `terraform/.terraform.lock.hcl` **is** tracked in
-version control. It pins the exact `hashicorp/google` provider version
-(currently `5.45.2`) so participants do not depend on the Terraform registry
-being available or returning a different version during the workshop.
-
-#### Teardown
-
-Run this after the workshop to destroy all GCP resources and stop billing:
-
-```bash
-make teardown-mi4
-```
-
-This runs `terraform destroy` and requires manual confirmation.
+| `make phase1-start` | Blank slate: keeps only `AGENTS.md`, `GEMINI.md`, `governance/*/TEMPLATE.md`, `geofence.kml`, and `terraform/`. Ready to start **Phase 1**. |
+| `make checkpoint-adrs` | Restores the reference ADRs (`0000`–`0004`) and LIMs (`0001`–`0002`). Ready to start **Phase 2**. |
+| `make checkpoint-features` | Restores reference ADRs, LIMs, `00_error_path_enumeration.md`, and `.feature` files. Ready for **Phase 3 & 4**. |
+| `make burn` | Restores reference ADRs, LIMs, Feature Files, and language-neutral Step Files, and deletes all application code. Ready for **Phase 5 (Autonomous Polyglot Implementation)**. |
+| `make restore-all` | Restores the complete reference workspace including the reference Go implementation. |
 
 ---
 
-## Guardrails Against Hallucination
+## Step-by-Step Workshop Guide
 
-- **No Magic Values:** All ports, IBANs, coordinates, and env vars are
-  explicit in the Gherkin file (BDD Guideline 2.1).
-- **Eventual Consistency:** Assertions use polling with deadlines instead
-  of fixed sleeps (BDD Guideline 6.4).
-- **Behavioural Equivalence:** MI4 uses the identical payloads as MI2/MI3.
-  If MI4 fails where MI2 passes, the problem is infrastructure — not logic.
-- **Test Isolation:** Firestore data is cleared after each scenario in
-  `bdd/environment.py`. MI2/MI3 use a single HTTP DELETE against the
-  emulator API (atomic, fast). MI4 streams and deletes documents
-  individually from real Firestore, touching only the `alerts` and
-  `geofences` collections.
+### Phase 0: Kickoff Video — Autonomous Rebuild from Zero Code
+
+Before writing anything, we watch the timelapse run: starting from **0 lines of application code** and a read-only specification (`governance/` + `bdd/`), a single prompt drives the agent to implement `geofence-lib-test`, `geofence-processor`, and `Dockerfile` until `make test-all` passes twice in a row.
+
+*(See [`../video-demo/README.md`](../video-demo/README.md) for the recording and assembly pipeline used to produce the workshop video.)*
 
 ---
 
-*Created for the presentation: Burn Your Code – Feature Files as the
-Ultimate AI Agent Prompt.*
+### Phase 1: Architecture Dialogue → ADRs & LIMs (`governance/`)
+
+1. Reset the workspace to the Phase 1 starting state:
+   ```bash
+   make phase1-start
+   ```
+2. Launch **Antigravity CLI (`agy`)** with Gemini and run the prompt in [`prompts/01-architecture-dialogue.md`](prompts/01-architecture-dialogue.md).
+3. Guided by [`GEMINI.md`](GEMINI.md) and [`AGENTS.md`](AGENTS.md), the agent asks **one architectural question at a time** (with options, a recommendation, and consequences — leaving the programming language open!).
+4. Review the generated files under `governance/adr/` (`0001`–`0004`) and `governance/limitations/` (`0001`–`0002`).
+
+*(Short on time? Run `make checkpoint-adrs` to load the reference ADRs and LIMs.)*
+
+---
+
+### Phase 2: Error Path Enumeration & Gherkin Feature Files (`bdd/`)
+
+1. In **Antigravity CLI (`agy`)**, run the prompt in [`prompts/02-error-paths-and-features.md`](prompts/02-error-paths-and-features.md).
+2. First, the agent creates [`bdd/00_error_path_enumeration.md`](bdd/00_error_path_enumeration.md) (BDD Guidelines §4.5: quantifying failure paths layer by layer before writing scenarios).
+3. Next, it drafts the four progressive milestone feature files:
+   - **`bdd/mi1_geofence_library.feature` (`@mi1`):** Point-in-polygon algorithm in isolation (`HomePasture` convex + `ComplexPasture` concave).
+   - **`bdd/mi2_geofence_processor.feature` (`@mi2`):** Local HTTP service with Firestore (`:8082`) and Pub/Sub (`:8085`) emulators (`Lilly` outside → alert; `Honey` inside → no alert).
+   - **`bdd/mi3_geofence_processor_image.feature` (`@mi3`):** OCI container image (`GET /health`, port `8081`, behavioral equivalence, plus `Scenario Outline` for HTTP `400` on missing mandatory fields).
+   - **`bdd/mi4_cloud_run.feature` (`@mi4`):** Live Cloud Run + real Pub/Sub + real Firestore (`project_id` in Background table as single source of truth).
+
+---
+
+### Phase 3: The Specification Critic (`bdd-critic`)
+
+Before a single line of Python step code or application code exists, we audit the specification as a whole (BDD Guidelines §14):
+
+1. Start a fresh **Antigravity CLI (`agy`)** session and run [`prompts/03-spec-critic.md`](prompts/03-spec-critic.md).
+2. The Critic reads **only Markdown and Gherkin** (`governance/adr/*.md`, `governance/limitations/*.md`, `bdd/00_error_path_enumeration.md`, `bdd/*.feature`) and checks all six edges:
+   - Binding set & statuses
+   - Record vs. Record contradictions
+   - Feature vs. Feature consistency across MI1–MI4
+   - ADR ↔ Feature File & Error Path coverage
+   - LIM coverage of deliberate V1 simplifications
+   - Scenario honesty (can `Then` fail? are negative controls present?)
+3. Resolve any findings in the ADRs, LIMs, or `.feature` files.
+
+*(Short on time? Run `make checkpoint-features` to load the audited reference specification.)*
+
+---
+
+### Phase 4: Language-Neutral Step Definitions & Step Honesty Audit (`bdd/steps/`)
+
+1. Run [`prompts/04a-step-definitions.md`](prompts/04a-step-definitions.md) in **Antigravity CLI (`agy`)** to generate the black-box Python `behave` steps (`bdd/steps/`) and cleanup hooks (`bdd/environment.py`).
+   - Notice how the steps are **100% language-neutral** ([ADR-0004](governance/adr/0004-language-neutral-black-box-test-harness.md)): MI1 talks `stdin`/`stdout` JSON to `./bin/geofence-lib-test`, MI2 runs `./bin/geofence-processor` over HTTP + Firestore emulator, MI3 runs the Docker container, and MI4 talks to GCP.
+2. Run the independent **Step Honesty Audit** (BDD Guidelines §13) using [`prompts/04b-step-honesty-audit.md`](prompts/04b-step-honesty-audit.md) to verify:
+   - **Check 1:** Independent channel verification (reading Firestore directly, never trusting HTTP 200 alone).
+   - **Check 2:** Origin analysis for all `Then` values.
+   - **Check 3:** Data symmetry (zero hidden business logic or fabricated defaults in Python steps).
+3. Verify that the suite runs and fails **cleanly RED**:
+   ```bash
+   make test-mi1
+   ```
+
+---
+
+### Phase 5: Autonomous Polyglot Code Generation & GCP Rollout (`GREEN` + `MI4`)
+
+Now comes the payoff!
+
+1. Ensure your workspace contains **only** the specification and steps (no application code):
+   ```bash
+   make burn
+   ```
+2. Choose **any programming language you want** — **Python**, **Go**, **Rust**, **TypeScript/Node.js**, **Java** — and launch **Antigravity CLI (`agy`)** with Gemini using [`prompts/05-autonomous-implementation.md`](prompts/05-autonomous-implementation.md):
+   ```bash
+   # Example interactive or headless run with Antigravity CLI:
+   agy --model gemini-4-argon-high
+   ```
+3. Watch Gemini implement the CLI (`./bin/geofence-lib-test`), the HTTP service (`./bin/geofence-processor`), and the `Dockerfile`, and iterate autonomously against the local emulators until `make test-all` passes **twice in a row**!
+
+```bash
+make test-mi1   # Milestone 1: Core algorithm via CLI
+make test-mi2   # Milestone 2: HTTP processor + Firestore/PubSub emulators
+make test-mi3   # Milestone 3: OCI Docker container + emulators
+make test-all   # Run MI1 + MI2 + MI3
+```
+
+---
+
+### Bonus: Milestone 4 — Live Deployment on Google Cloud Run (`@mi4`)
+
+> **⚠ WARNING: Milestone 4 provisions real GCP resources and incurs costs.**
+> Always run `make teardown-mi4` after the session to destroy all cloud resources.
+
+The exact same Gherkin scenarios that passed locally in MI2 and MI3 now run against live **Google Cloud Run**, real **Firestore**, and real **Pub/Sub**:
+
+1. **One edit in the specification:** Open `bdd/mi4_cloud_run.feature` and change `project_id` in the `Background` table to your GCP project ID. (The `Makefile` extracts `project_id` from there automatically and passes it to Docker and Terraform — zero duplicate config files!)
+2. **Ensure GCP authentication:**
+   ```bash
+   gcloud auth login
+   gcloud auth application-default login
+   ```
+3. **Provision & Deploy via Terraform:**
+   ```bash
+   make tf-apply
+   ```
+4. **Run the live Cloud Run BDD suite:**
+   ```bash
+   make test-mi4
+   ```
+5. **Teardown after the workshop:**
+   ```bash
+   make teardown-mi4
+   ```

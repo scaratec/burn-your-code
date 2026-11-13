@@ -1,3 +1,5 @@
+# Source: ADR-0002 (Cloud Run + Pub/Sub push), ADR-0003 (Firestore schema), ADR-0004 (MI4 live GCP harness), LIM-0002 (Stateless evaluation)
+# Independent Channel: Real GCP Firestore in `project_id` and authenticated HTTP `GET /health`
 @cloud @live @mi4
 Feature: Geofence Processor on Cloud Run (Live GCP)
   As the EquiGuard system in production

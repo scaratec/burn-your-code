@@ -40,19 +40,24 @@ def step_when_run_library_test(context, command):
             "polygon": polygon
         }
         
-        # Call the pre-built CLI wrapper (built by `make build`)
+        # Call the language-neutral CLI executable (built by `make build`, ADR-0004)
         cmd = ["./bin/geofence-lib-test"]
+        if not (subprocess.os.path.isfile(cmd[0]) and subprocess.os.access(cmd[0], subprocess.os.X_OK)):
+            raise AssertionError(
+                "RED: Executable './bin/geofence-lib-test' not found or not executable. "
+                "Implement the geofence CLI contract (stdin JSON -> stdout JSON) to turn this scenario GREEN."
+            )
 
         process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = process.communicate(input=json.dumps(payload))
         
         if process.returncode != 0:
-            raise RuntimeError(f"Go wrapper failed: {stderr}")
+            raise RuntimeError(f"geofence-lib-test CLI failed (exit {process.returncode}): {stderr}")
             
         try:
             result = json.loads(stdout)
         except json.JSONDecodeError:
-            raise RuntimeError(f"Failed to decode Go wrapper output: {stdout}")
+            raise RuntimeError(f"Failed to decode geofence-lib-test JSON output: {stdout}")
             
         context.library_result = result.get("is_inside")
     else:
